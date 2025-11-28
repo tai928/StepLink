@@ -2,147 +2,128 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Twitter Like</title>
+  <title>StepLink</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-theme="dark">
   <div class="app">
     <!-- 左サイドバー -->
     <aside class="sidebar-left">
-      <div class="logo">🐦</div>
+      <div class="logo">🔗</div>
       <nav class="nav">
-        <button class="nav-item active" data-view="home">ホーム</button>
-        <button class="nav-item" data-view="notifications">通知</button>
-        <button class="nav-item" data-view="messages">メッセージ</button>
-        <button class="nav-item" data-view="profile">プロフィール</button>
+        <a href="#" class="nav-item active" data-page="home">ホーム</a>
+        <a href="#" class="nav-item" data-page="notifications">通知</a>
+        <a href="#" class="nav-item" data-page="messages">メッセージ</a>
+        <a href="#" class="nav-item" data-page="profile">プロフィール</a>
       </nav>
-      <button class="tweet-button" id="openModalBtn">ツイートする</button>
+      <button class="tweet-button" id="openModalBtn">投稿する</button>
     </aside>
 
-    <!-- メイン -->
-    <main class="main">
-      <header class="main-header">
-        <h1 id="mainTitle">ホーム</h1>
+    <!-- ホームタイムライン -->
+    <main class="timeline" id="homePage">
+      <header class="timeline-header">
+        <h1>ホーム</h1>
       </header>
 
-      <!-- ホームビュー（タイムライン） -->
-      <section id="view-home" class="view active">
-        <!-- 上部ツイートボックス -->
-        <article class="new-tweet-card">
-          <div class="avatar">🧑‍💻</div>
-          <div class="new-tweet-body">
-            <textarea id="tweetInput"
-                      placeholder="いまどうしてる？"></textarea>
+      <!-- 新規ツイートカード -->
+      <section class="new-tweet-card">
+        <div class="avatar">🧑‍💻</div>
+        <div class="new-tweet-body">
+          <textarea id="tweetInput"
+                    placeholder="いまどうしてる？"></textarea>
 
-            <div class="new-tweet-extra">
-              <label class="image-input-label">
-                📷
-                <input type="file" id="imageInput" accept="image/*" />
-              </label>
+          <div class="image-preview" id="imagePreview"></div>
+
+          <div class="new-tweet-actions">
+            <div class="left-actions">
+              <button type="button" class="icon-btn" id="imageSelectBtn">🖼 </button>
               <span class="char-counter" id="charCounter">0 / 140</span>
             </div>
-
-            <div id="imagePreview" class="image-preview hidden"></div>
-
-            <div class="new-tweet-actions">
-              <div></div>
-              <button id="postTweetBtn">ツイート</button>
-            </div>
+            <button id="postTweetBtn">ツイート</button>
           </div>
-        </article>
-
-        <!-- タイムライン -->
-        <section id="tweetsContainer" class="tweets">
-          <!-- JSで追加 -->
-        </section>
+          <input type="file" id="imageInput" accept="image/*" hidden />
+        </div>
       </section>
 
-      <!-- 通知ビュー（ダミー） -->
-      <section id="view-notifications" class="view">
-        <p class="placeholder">まだ通知はないよ。せっせとツイートしてみよ 🐣</p>
+      <section id="tweetsContainer" class="tweets">
+        <!-- JSからツイートがここに追加される -->
+      </section>
+    </main>
+
+    <!-- プロフィールページ -->
+    <main class="timeline hidden" id="profilePage">
+      <header class="timeline-header">
+        <h1>プロフィール</h1>
+      </header>
+
+      <section class="profile-header">
+        <div class="profile-banner"></div>
+        <div class="profile-main">
+          <div class="profile-avatar">🧑‍💻</div>
+          <button class="edit-profile-btn">プロフィールを編集</button>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">たい</div>
+          <div class="profile-handle">@tai_</div>
+          <div class="profile-bio">デザインであそんでる学生。</div>
+        </div>
+        <nav class="profile-tabs">
+          <button class="profile-tab active">ポスト</button>
+        </nav>
       </section>
 
-      <!-- メッセージビュー（ダミー） -->
-      <section id="view-messages" class="view">
-        <p class="placeholder">DM機能は開発中…</p>
-      </section>
-
-      <!-- プロフィールビュー -->
-      <section id="view-profile" class="view">
-        <article class="profile-card">
-          <div class="profile-header-bg"></div>
-          <div class="profile-main">
-            <div class="profile-avatar">🧑‍💻</div>
-            <div class="profile-names">
-              <div class="profile-name">たい</div>
-              <div class="profile-handle">@tai_clone</div>
-            </div>
-            <p class="profile-bio">
-              学生 / デザイナー / フロントエンドエンジニア ✨  
-            </p>
-            <div class="profile-stats">
-              <span><span id="profileTweetsCount">0</span> ツイート</span>
-              <span>1 フォロー</span>
-              <span>1,234 フォロワー</span>
-            </div>
-          </div>
-        </article>
-
-        <section id="profileTweetsContainer" class="tweets"></section>
+      <section id="profileTweetsContainer" class="tweets">
+        <!-- 自分のツイート一覧（全部） -->
       </section>
     </main>
 
     <!-- 右サイドバー -->
     <aside class="sidebar-right">
-      <div class="search-box">
-        <input type="text" placeholder="検索" />
+      <div class="top-right-row">
+        <div class="search-box">
+          <input type="text" placeholder="検索" />
+        </div>
+        <button id="themeToggle" class="icon-btn theme-toggle" title="テーマ切り替え">
+          🌙
+        </button>
       </div>
 
       <div class="card">
-        <div class="card-header">
-          <h2>いまどう？</h2>
-          <button id="themeToggle" class="theme-toggle" title="ライト/ダーク切替">
-            🌙
-          </button>
-        </div>
+        <h2>いまどう？</h2>
         <ul class="trend-list">
-          <li>#Twitter</li>
-          <li>#FrontEnd</li>
+          <li>#StepLink</li>
+          <li>#Music</li>
           <li>#AI</li>
         </ul>
       </div>
     </aside>
   </div>
 
-  <!-- ツイートモーダル -->
-  <div id="modalOverlay" class="modal-overlay hidden">
-    <div class="modal">
+  <!-- ツイート用モーダル -->
+  <div id="tweetModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
       <header class="modal-header">
-        <button id="closeModalBtn" class="icon-button">✕</button>
-        <span>新しいツイート</span>
+        <button id="closeModalBtn" class="icon-btn">✕</button>
       </header>
-      <article class="new-tweet-card modal-tweet-card">
+      <section class="new-tweet-card modal-body">
         <div class="avatar">🧑‍💻</div>
         <div class="new-tweet-body">
-          <textarea id="modalTweetInput"
+          <textarea id="tweetInputModal"
                     placeholder="いまどうしてる？"></textarea>
 
-          <div class="new-tweet-extra">
-            <label class="image-input-label">
-              📷
-              <input type="file" id="modalImageInput" accept="image/*" />
-            </label>
-            <span class="char-counter" id="modalCharCounter">0 / 140</span>
-          </div>
-
-          <div id="modalImagePreview" class="image-preview hidden"></div>
+          <div class="image-preview" id="imagePreviewModal"></div>
 
           <div class="new-tweet-actions">
-            <div></div>
-            <button id="modalPostTweetBtn">ツイート</button>
+            <div class="left-actions">
+              <button type="button" class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+              <span class="char-counter" id="charCounterModal">0 / 140</span>
+            </div>
+            <button id="postTweetBtnModal">ツイート</button>
           </div>
+          <input type="file" id="imageInputModal" accept="image/*" hidden />
         </div>
-      </article>
+      </section>
     </div>
   </div>
 
