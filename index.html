@@ -17,6 +17,16 @@
         <a href="#" class="nav-item" data-page="profile">プロフィール</a>
       </nav>
       <button class="tweet-button" id="openModalBtn">投稿する</button>
+      <div class="account-summary">
+        <div class="account-main">
+          <div class="account-avatar" id="currentUserAvatar">🧑‍💻</div>
+          <div class="account-text">
+            <div class="account-name" id="currentUserName">たい</div>
+            <div class="account-handle" id="currentUserHandle">@tai_clone</div>
+          </div>
+        </div>
+        <button class="icon-btn small" id="switchAccountBtn">切り替え</button>
+      </div>
     </aside>
 
     <!-- ホームタイムライン -->
@@ -153,6 +163,63 @@
           <input type="file" id="imageInputModal" accept="image/*" hidden />
         </div>
       </section>
+    </div>
+  </div>
+  <!-- アカウント切り替えモーダル -->
+  <div id="accountModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <button id="closeAccountModalBtn" class="icon-btn">✕</button>
+      </header>
+      <div class="modal-body account-modal-body">
+        <div class="account-tabs">
+          <button class="account-tab active" data-mode="login">ログイン</button>
+          <button class="account-tab" data-mode="register">新規作成</button>
+        </div>
+
+        <!-- ログイン画面 -->
+        <div id="accountLoginView">
+          <label>
+            ハンドルネーム（@なし）
+            <input id="loginHandleInput" type="text" placeholder="tai_clone" />
+          </label>
+          <label>
+            パスワード
+            <input id="loginPasswordInput" type="password" />
+          </label>
+          <button class="primary" id="loginSubmitBtn">ログイン</button>
+          <div id="loginError" class="account-error"></div>
+          <div class="account-note">
+            ※勉強用だから、本当のパスワードは絶対に入れないこと！
+          </div>
+        </div>
+
+        <!-- 新規登録画面 -->
+        <div id="accountRegisterView" class="hidden">
+          <label>
+            表示名
+            <input id="regNameInput" type="text" placeholder="たい" />
+          </label>
+          <label>
+            ハンドルネーム（@なし）
+            <input id="regHandleInput" type="text" placeholder="tai_sub" />
+          </label>
+          <label>
+            好きな絵文字（アイコン）
+            <input id="regAvatarInput" type="text" placeholder="🧑‍💻" />
+          </label>
+          <label>
+            パスワード
+            <input id="regPasswordInput" type="password" />
+          </label>
+          <button class="primary" id="registerSubmitBtn">アカウント作成</button>
+          <div id="registerError" class="account-error"></div>
+          <div class="account-note">
+            ※これもローカル保存だけ。ガチパスワードは禁止ね✋
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
