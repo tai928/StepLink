@@ -6,9 +6,30 @@
     "Segoe UI", sans-serif;
 }
 
+:root {
+  --bg-main: #000000;
+  --bg-card: #16181c;
+  --bg-input: #202327;
+  --border-subtle: #222;
+  --text-primary: #e7e9ea;
+  --text-muted: #71767b;
+  --accent: #1d9bf0;
+}
+
+/* ライトテーマ用 */
+body[data-theme="light"] {
+  --bg-main: #f5f8fa;
+  --bg-card: #ffffff;
+  --bg-input: #e1e8ed;
+  --border-subtle: #dfe3e8;
+  --text-primary: #0f1419;
+  --text-muted: #536471;
+  --accent: #1d9bf0;
+}
+
 body {
-  background: #000;
-  color: #fff;
+  background: var(--bg-main);
+  color: var(--text-primary);
 }
 
 .app {
@@ -19,9 +40,14 @@ body {
   min-height: 100vh;
 }
 
+/* 共通表示切り替え */
+.hidden {
+  display: none;
+}
+
 /* 左サイドバー */
 .sidebar-left {
-  border-right: 1px solid #222;
+  border-right: 1px solid var(--border-subtle);
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
@@ -39,15 +65,17 @@ body {
 }
 
 .nav-item {
-  color: #e7e9ea;
+  color: var(--text-primary);
   text-decoration: none;
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 15px;
+  transition: background 0.2s ease, padding 0.2s ease;
 }
 
 .nav-item:hover {
-  background: #181818;
+  background: rgba(255, 255, 255, 0.06);
+  padding-left: 18px;
 }
 
 .nav-item.active {
@@ -59,29 +87,34 @@ body {
   padding: 10px 0;
   border: none;
   border-radius: 999px;
-  background: #1d9bf0;
+  background: var(--accent);
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
 }
 
 .tweet-button:hover {
-  background: #1a8cd8;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* メインタイムライン */
 .timeline {
-  border-right: 1px solid #222;
+  border-right: 1px solid var(--border-subtle);
+  padding: 0 16px;
 }
 
+/* 新規ツイートカード */
 .new-tweet-card {
   display: flex;
-  padding: 12px 16px;
-  border-bottom: 1px solid #222;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.avatar {
+.avatar,
+.profile-avatar {
   width: 40px;
   height: 40px;
   border-radius: 999px;
@@ -90,6 +123,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-right: 12px;
+  font-size: 20px;
 }
 
 .new-tweet-body {
@@ -101,15 +135,42 @@ body {
   background: transparent;
   border: none;
   resize: none;
-  color: #e7e9ea;
+  color: var(--text-primary);
   font-size: 15px;
   min-height: 60px;
   outline: none;
 }
 
+.new-tweet-extra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.image-upload {
+  font-size: 14px;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.image-preview {
+  display: flex;
+  gap: 8px;
+}
+
+.image-preview img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+}
+
 .new-tweet-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
   margin-top: 8px;
@@ -117,17 +178,23 @@ body {
 
 .char-counter {
   font-size: 12px;
-  color: #71767b;
+  color: var(--text-muted);
 }
 
 #postTweetBtn {
   border-radius: 999px;
   border: none;
-  background: #1d9bf0;
+  background: var(--accent);
   color: #fff;
   font-size: 14px;
   padding: 8px 16px;
   cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+#postTweetBtn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 #postTweetBtn:disabled {
@@ -135,6 +202,7 @@ body {
   cursor: not-allowed;
 }
 
+/* ツイート一覧 */
 .tweets {
   display: flex;
   flex-direction: column;
@@ -142,8 +210,9 @@ body {
 
 .tweet {
   display: flex;
-  padding: 12px 16px;
-  border-bottom: 1px solid #222;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
 }
 
 .tweet .avatar {
@@ -158,24 +227,36 @@ body {
   display: flex;
   gap: 4px;
   font-size: 14px;
+  align-items: center;
 }
 
 .tweet-name {
   font-weight: 700;
 }
 
-.tweet-handle {
-  color: #71767b;
-}
-
+.tweet-handle,
 .tweet-time {
-  color: #71767b;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .tweet-text {
   margin-top: 4px;
   font-size: 15px;
   line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.tweet-image {
+  margin-top: 8px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.tweet-image img {
+  width: 100%;
+  display: block;
 }
 
 .tweet-footer {
@@ -183,7 +264,36 @@ body {
   gap: 24px;
   margin-top: 8px;
   font-size: 13px;
-  color: #71767b;
+  color: var(--text-muted);
+}
+
+.tweet-footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* いいねボタン */
+.tweet-like {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.tweet-like.liked {
+  color: #f91880;
+  animation: likePulse 0.2s ease;
+}
+
+@keyframes likePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* 右サイドバー */
@@ -199,13 +309,13 @@ body {
   border-radius: 999px;
   border: none;
   padding: 8px 16px;
-  background: #202327;
-  color: #e7e9ea;
+  background: var(--bg-input);
+  color: var(--text-primary);
   outline: none;
 }
 
 .card {
-  background: #16181c;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 12px 16px;
 }
@@ -218,30 +328,66 @@ body {
 .trend-list {
   list-style: none;
   font-size: 14px;
-  color: #e7e9ea;
+  color: var(--text-primary);
 }
 
 .trend-list li {
   padding: 4px 0;
 }
 
-/* スマホ用レスポンシブ */
-@media (max-width: 800px) {
-  .app {
-    grid-template-columns: 60px minmax(0, 1fr);
-  }
-  .sidebar-right {
-    display: none;
-  }
-  .sidebar-left {
-    align-items: center;
-  }
-  .nav-item {
-    text-align: center;
-    padding: 6px 0;
-  }
-  .tweet-button {
-    width: 100%;
-    font-size: 13px;
-  }
+/* テーマ切替ボタン */
+.theme-toggle {
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
 }
+
+/* プロフィールページ */
+.profile-header {
+  display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.profile-avatar {
+  margin-right: 12px;
+  font-size: 24px;
+}
+
+.profile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.profile-handle {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.profile-bio {
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.profile-stats {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* モーダル */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify
