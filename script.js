@@ -126,7 +126,7 @@ async function fetchProfile(userId) {
       .eq("id", userId)
       .single();
     if (error) {
-      console.warn("fetchProfile error (無視してOKな場合もある):", error.message);
+      console.warn("fetchProfile error:", error.message);
       return null;
     }
     return data;
@@ -389,4 +389,159 @@ function setupComposer({ textarea, postButton, counter, fileInput, fileButton, p
 }
 
 async function createTweet(user, text, imageSrc) {
-  try:
+  try {
+    const { error } = await supabase.from("tweets").insert({
+      user_id: user.id,
+      text,
+      image_url: imageSrc
+    });
+    if (error) {
+      console.error("createTweet error:", error);
+      alert("投稿の保存に失敗した…");
+      return;
+    }
+    await loadAndRenderTweets();
+  } catch (e) {
+    console.error("createTweet exception:", e);
+    alert("投稿でエラーが発生した…");
+  }
+}
+
+async function loadTweets() {
+  try {
+    const { data, error } = await supabase
+      .from("tweets")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("loadTweets error:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (e) {
+    console.error("loadTweets exception:", e);
+    return [];
+  }
+}
+
+async function loadAndRenderTweets() {
+  const tweets = await loadTweets();
+
+  const renderTo = (container) => {
+    if (!container) return;
+    container.innerHTML = "";
+
+    tweets.forEach((t) => {
+      const el = document.createElement("article");
+      el.className = "tweet";
+      el.innerHTML = `
+        <div class="avatar">🧑‍💻</div>
+        <div class="tweet-main">
+          <div class="tweet-header">
+            <span class="tweet-name">StepLinkユーザー</span>
+            <span class="tweet-handle">@user</span>
+            <span class="tweet-time">・${formatTime(t.created_at)}</span>
+          </div>
+          <div class="tweet-text"></div>
+          ${
+            t.image_url
+              ? `<div class="tweet-image"><img src="${t.image_url}" alt="image" /></div>`
+              : ""
+          }
+        </div>
+      `;
+      el.querySelector(".tweet-text").textContent = t.text;
+      container.appendChild(el);
+    });
+  };
+
+  renderTo(tweetsContainer);
+  renderTo(profileTweetsContainer);
+}
+
+// ==============================
+// ページ切り替え
+// ==============================
+
+function showPage(page) {
+  if (homePage) homePage.classList.add("hidden");
+  if (messagesPage) messagesPage.classList.add("hidden");
+  if (profilePage) profilePage.classList.add("hidden");
+
+  if (page === "messages" && messagesPage) {
+    messagesPage.classList.remove("hidden");
+  } else if (page === "profile" && profilePage) {
+    profilePage.classList.remove("hidden");
+  } else if (homePage) {
+    homePage.classList.remove("hidden");
+  }
+}
+
+navItems.forEach((item) => {
+  item.addEventListener("click", (e) => {
+    e.preventDefault();
+    const page = item.dataset.page;
+    navItems.forEach((n) => n.classList.remove("active"));
+    item.classList.add("active");
+    showPage(page);
+  });
+});
+
+// ==============================
+// 投稿モーダル
+// ==============================
+
+function openModal() {
+  if (!tweetModal) return;
+  tweetModal.classList.remove("hidden");
+  if (tweetInputModal) tweetInputModal.focus();
+}
+
+function closeModal() {
+  if (!tweetModal) return;
+  tweetModal.classList.add("hidden");
+}
+
+if (openModalBtn && closeModalBtn && tweetModal) {
+  openModalBtn.addEventListener("click", openModal);
+  closeModalBtn.addEventListener("click", closeModal);
+  tweetModal.addEventListener("click", (e) => {
+    if (e.target === tweetModal || e.target.classList.contains("modal-backdrop")) {
+      closeModal();
+    }
+  });
+}
+
+// ==============================
+// 初期化
+// ==============================
+
+(async () => {
+  loadTheme();
+
+  // メイン投稿欄
+  setupComposer({
+    textarea: tweetInput,
+    postButton: postTweetBtn,
+    counter: charCounter,
+    fileInput: imageInput,
+    fileButton: imageSelectBtn,
+    preview: imagePreview
+  });
+
+  // モーダル投稿欄
+  setupComposer({
+    textarea: tweetInputModal,
+    postButton: postTweetBtnModal,
+    counter: charCounterModal,
+    fileInput: imageInputModal,
+    fileButton: imageSelectBtnModal,
+    preview: imagePreviewModal,
+    afterPost: closeModal
+  });
+
+  await updateCurrentUserUI();
+  await loadAndRenderTweets();
+})();
