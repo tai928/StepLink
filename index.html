@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ミニTwitter</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 左サイドバー -->
+    <aside class="sidebar-left">
+      <div class="logo">🐦</div>
+      <nav class="nav">
+        <a href="#" class="nav-item active">ホーム</a>
+        <a href="#" class="nav-item">通知</a>
+        <a href="#" class="nav-item">メッセージ</a>
+        <a href="#" class="nav-item">プロフィール</a>
+      </nav>
+      <button class="tweet-button">ツイートする</button>
+    </aside>
+
+    <!-- メインタイムライン -->
+    <main class="timeline">
+      <div class="new-tweet-card">
+        <div class="avatar">🧑‍💻</div>
+        <div class="new-tweet-body">
+          <textarea id="tweetInput"
+                    placeholder="いまどうしてる？"></textarea>
+          <div class="new-tweet-actions">
+            <span class="char-counter" id="charCounter">0 / 140</span>
+            <button id="postTweetBtn">ツイート</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tweetsContainer" class="tweets">
+        <!-- JSからツイートがここに追加される -->
+      </div>
+    </main>
+
+    <!-- 右サイド（トレンドとか） -->
+    <aside class="sidebar-right">
+      <div class="search-box">
+        <input type="text" placeholder="検索" />
+      </div>
+
+      <div class="card">
+        <h2>いまどう？</h2>
+        <ul class="trend-list">
+          <li>#Twitterクローン</li>
+          <li>#フロントエンド楽しい</li>
+          <li>#たいの作品</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
