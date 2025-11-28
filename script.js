@@ -13,7 +13,7 @@ const imagePreview = document.getElementById("imagePreview");
 const tweetsContainer = document.getElementById("tweetsContainer");
 const profileTweetsContainer = document.getElementById("profileTweetsContainer");
 
-// モーダル用
+// モーダル（ツイート）
 const tweetModal = document.getElementById("tweetModal");
 const openModalBtn = document.getElementById("openModalBtn");
 const closeModalBtn = document.getElementById("closeModalBtn");
@@ -24,7 +24,7 @@ const imageInputModal = document.getElementById("imageInputModal");
 const imageSelectBtnModal = document.getElementById("imageSelectBtnModal");
 const imagePreviewModal = document.getElementById("imagePreviewModal");
 
-// ページ切り替え用
+// ページ切り替え
 const navItems = document.querySelectorAll(".nav-item");
 const homePage = document.getElementById("homePage");
 const profilePage = document.getElementById("profilePage");
@@ -40,6 +40,31 @@ const dmChatBody = document.getElementById("dmChatBody");
 const dmInput = document.getElementById("dmInput");
 const dmSendBtn = document.getElementById("dmSendBtn");
 
+// アカウント表示
+const currentUserNameEl = document.getElementById("currentUserName");
+const currentUserHandleEl = document.getElementById("currentUserHandle");
+const currentUserAvatarEl = document.getElementById("currentUserAvatar");
+const switchAccountBtn = document.getElementById("switchAccountBtn");
+
+// アカウントモーダル
+const accountModal = document.getElementById("accountModal");
+const closeAccountModalBtn = document.getElementById("closeAccountModalBtn");
+const accountTabs = document.querySelectorAll(".account-tab");
+const loginView = document.getElementById("accountLoginView");
+const registerView = document.getElementById("accountRegisterView");
+
+const loginHandleInput = document.getElementById("loginHandleInput");
+const loginPasswordInput = document.getElementById("loginPasswordInput");
+const loginSubmitBtn = document.getElementById("loginSubmitBtn");
+const loginErrorEl = document.getElementById("loginError");
+
+const regNameInput = document.getElementById("regNameInput");
+const regHandleInput = document.getElementById("regHandleInput");
+const regAvatarInput = document.getElementById("regAvatarInput");
+const regPasswordInput = document.getElementById("regPasswordInput");
+const registerSubmitBtn = document.getElementById("registerSubmitBtn");
+const registerErrorEl = document.getElementById("registerError");
+
 // ==============================
 // 定数・状態
 // ==============================
@@ -47,11 +72,17 @@ const dmSendBtn = document.getElementById("dmSendBtn");
 const MAX_LENGTH = 140;
 const TWEETS_KEY = "miniTwitterTweets";
 const THEME_KEY = "miniTwitterTheme";
+const USERS_KEY = "miniTwitterUsers";
+const CURRENT_USER_KEY = "miniTwitterCurrentUserId";
 
 // ツイート配列
-let tweets = []; // {id, name, handle, text, createdAt, imageSrc, liked, likeCount, replyCount, rtCount}
+let tweets = []; // {id, userId, name, handle, avatar, text, createdAt, imageSrc, liked, likeCount, replyCount, rtCount}
 
-// DMスレッド（最初から2つダミーで用意）
+// ユーザー配列
+let users = []; // {id, name, handle, avatar, bio, password}
+let currentUserId = null;
+
+// DMスレッド
 let dmThreads = [
   {
     id: "1",
@@ -59,16 +90,8 @@ let dmThreads = [
     handle: "@class_2_4",
     avatar: "👥",
     messages: [
-      {
-        from: "other",
-        text: "明日のプリント配布よろしく〜！",
-        at: new Date()
-      },
-      {
-        from: "me",
-        text: "了解、ホームルーム前に配っとく👍",
-        at: new Date()
-      }
+      { from: "other", text: "明日のプリント配布よろしく〜！", at: new Date() },
+      { from: "me", text: "了解、ホームルーム前に配っとく👍", at: new Date() }
     ]
   },
   {
@@ -77,11 +100,7 @@ let dmThreads = [
     handle: "@miku",
     avatar: "🎧",
     messages: [
-      {
-        from: "other",
-        text: "新曲できたからあとで聞いてほしい！",
-        at: new Date()
-      }
+      { from: "other", text: "新曲できたからあとで聞いてほしい！", at: new Date() }
     ]
   }
 ];
@@ -108,6 +127,164 @@ function toggleTheme() {
 }
 
 themeToggle.addEventListener("click", toggleTheme);
+
+// ==============================
+// ユーザー（アカウント）管理
+// ==============================
+
+function saveUsers() {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  localStorage.setItem(CURRENT_USER_KEY, currentUserId || "");
+}
+
+function loadUsers() {
+  const raw = localStorage.getItem(USERS_KEY);
+  if (raw) {
+    try {
+      users = JSON.parse(raw);
+    } catch {
+      users = [];
+    }
+  }
+
+  const savedId = localStorage.getItem(CURRENT_USER_KEY);
+  if (savedId) currentUserId = savedId;
+
+  // 初回起動用のデフォ垢
+  if (users.length === 0) {
+    const defaultUser = {
+      id: "u_default",
+      name: "たい",
+      handle: "tai_clone",
+      avatar: "🧑‍💻",
+      bio: "フロントエンドとデザインであそんでる学生。",
+      password: "pass" // 勉強用ダミー
+    };
+    users.push(defaultUser);
+    currentUserId = defaultUser.id;
+    saveUsers();
+  }
+
+  if (!currentUserId) {
+    currentUserId = users[0].id;
+    saveUsers();
+  }
+}
+
+function getCurrentUser() {
+  return users.find((u) => u.id === currentUserId) || null;
+}
+
+function updateCurrentUserUI() {
+  const u = getCurrentUser();
+  if (!u) {
+    currentUserNameEl.textContent = "未ログイン";
+    currentUserHandleEl.textContent = "";
+    currentUserAvatarEl.textContent = "❔";
+    return;
+  }
+  currentUserNameEl.textContent = u.name;
+  currentUserHandleEl.textContent = "@" + u.handle;
+  currentUserAvatarEl.textContent = u.avatar || "🧑‍💻";
+}
+
+// ==============================
+// アカウントモーダル制御
+// ==============================
+
+function openAccountModal() {
+  accountModal.classList.remove("hidden");
+}
+
+function closeAccountModal() {
+  accountModal.classList.add("hidden");
+  loginErrorEl.textContent = "";
+  registerErrorEl.textContent = "";
+}
+
+switchAccountBtn.addEventListener("click", openAccountModal);
+closeAccountModalBtn.addEventListener("click", closeAccountModal);
+
+accountModal.addEventListener("click", (e) => {
+  if (e.target === accountModal || e.target.classList.contains("modal-backdrop")) {
+    closeAccountModal();
+  }
+});
+
+// タブ切り替え（ログイン / 新規作成）
+accountTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    accountTabs.forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    const mode = tab.dataset.mode;
+    if (mode === "login") {
+      loginView.classList.remove("hidden");
+      registerView.classList.add("hidden");
+    } else {
+      loginView.classList.add("hidden");
+      registerView.classList.remove("hidden");
+    }
+  });
+});
+
+// ログイン処理
+loginSubmitBtn.addEventListener("click", () => {
+  const handle = loginHandleInput.value.trim();
+  const pw = loginPasswordInput.value;
+  loginErrorEl.textContent = "";
+
+  if (!handle || !pw) {
+    loginErrorEl.textContent = "ハンドルとパスワードを入れてね";
+    return;
+  }
+
+  const u = users.find((u) => u.handle === handle);
+  if (!u || u.password !== pw) {
+    loginErrorEl.textContent = "ハンドル名かパスワードが違うよ";
+    return;
+  }
+
+  currentUserId = u.id;
+  saveUsers();
+  updateCurrentUserUI();
+  renderAllTweetLists();
+  closeAccountModal();
+});
+
+// 新規登録処理
+registerSubmitBtn.addEventListener("click", () => {
+  const name = regNameInput.value.trim();
+  const handle = regHandleInput.value.trim();
+  const avatar = (regAvatarInput.value.trim() || "🧑‍💻").slice(0, 4);
+  const pw = regPasswordInput.value;
+  registerErrorEl.textContent = "";
+
+  if (!name || !handle || !pw) {
+    registerErrorEl.textContent = "全部入力してね";
+    return;
+  }
+
+  if (users.some((u) => u.handle === handle)) {
+    registerErrorEl.textContent = "そのハンドルはすでに使われてるよ";
+    return;
+  }
+
+  const newUser = {
+    id: "u_" + Date.now() + Math.random().toString(16).slice(2),
+    name,
+    handle,
+    avatar,
+    bio: "",
+    password: pw
+  };
+
+  users.push(newUser);
+  currentUserId = newUser.id;
+  saveUsers();
+  updateCurrentUserUI();
+  renderAllTweetLists();
+  closeAccountModal();
+});
 
 // ==============================
 // ツイート保存 / 読み込み
@@ -178,17 +355,22 @@ function setupComposer({
 
     const file = fileInput.files[0];
 
-    // 画像あり・なし両対応
+    const user = getCurrentUser();
+    if (!user) {
+      alert("ツイートするにはアカウントにログインしてね");
+      return;
+    }
+
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageSrc = e.target.result;
-        createTweet(text, imageSrc);
+        createTweetForUser(user, text, imageSrc);
         finishPost();
       };
       reader.readAsDataURL(file);
     } else {
-      createTweet(text, null);
+      createTweetForUser(user, text, null);
       finishPost();
     }
 
@@ -199,7 +381,6 @@ function setupComposer({
       fileInput.value = "";
       preview.style.display = "none";
       preview.innerHTML = "";
-
       if (afterPost) afterPost();
     }
   });
@@ -213,11 +394,13 @@ function setupComposer({
 // ツイート生成＆描画
 // ==============================
 
-function createTweet(text, imageSrc) {
+function createTweetForUser(user, text, imageSrc) {
   const tweet = {
     id: Date.now().toString() + Math.random().toString(16).slice(2),
-    name: "たい",
-    handle: "@tai_clone",
+    userId: user.id,
+    name: user.name,
+    handle: "@" + user.handle,
+    avatar: user.avatar || "🧑‍💻",
     text,
     imageSrc,
     createdAt: new Date(),
@@ -248,6 +431,10 @@ function renderTweetsTo(container) {
   container.innerHTML = "";
 
   tweets.forEach((t) => {
+    const name = t.name || "たい";
+    const handle = t.handle || "@tai_clone";
+    const avatar = t.avatar || "🧑‍💻";
+
     const el = document.createElement("article");
     el.className = "tweet";
     el.dataset.id = t.id;
@@ -257,11 +444,11 @@ function renderTweetsTo(container) {
       : "like-btn tweet-action-btn";
 
     el.innerHTML = `
-      <div class="avatar">🧑‍💻</div>
+      <div class="avatar">${avatar}</div>
       <div class="tweet-main">
         <div class="tweet-header">
-          <span class="tweet-name">${t.name}</span>
-          <span class="tweet-handle">${t.handle}</span>
+          <span class="tweet-name">${name}</span>
+          <span class="tweet-handle">${handle}</span>
           <span class="tweet-time">・${formatTime(t.createdAt)}</span>
         </div>
         <div class="tweet-text"></div>
@@ -328,7 +515,6 @@ profileTweetsContainer.addEventListener("click", handleTweetActionClick);
 // ==============================
 
 function showPage(page) {
-  // いったん全部隠す
   homePage.classList.add("hidden");
   profilePage.classList.add("hidden");
   messagesPage.classList.add("hidden");
@@ -428,7 +614,6 @@ function renderDmChat() {
     dmChatBody.appendChild(row);
   });
 
-  // 一番下までスクロール
   dmChatBody.scrollTop = dmChatBody.scrollHeight;
 }
 
@@ -473,10 +658,8 @@ function sendDmMessage() {
   renderDmAll();
 }
 
-// ボタンクリックで送信
 dmSendBtn.addEventListener("click", sendDmMessage);
 
-// Enterキーで送信（Shift+Enterで改行）
 dmInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -485,7 +668,7 @@ dmInput.addEventListener("keydown", (e) => {
 });
 
 // ==============================
-// モーダル制御
+// ツイートモーダル制御
 // ==============================
 
 function openModal() {
@@ -500,7 +683,6 @@ function closeModal() {
 openModalBtn.addEventListener("click", openModal);
 closeModalBtn.addEventListener("click", closeModal);
 
-// 背景クリックで閉じる
 tweetModal.addEventListener("click", (e) => {
   if (
     e.target === tweetModal ||
@@ -514,7 +696,15 @@ tweetModal.addEventListener("click", (e) => {
 // 初期化
 // ==============================
 
-// ツイート入力欄（メイン）
+loadUsers();
+loadTweets();
+loadTheme();
+
+updateCurrentUserUI();
+renderAllTweetLists();
+renderDmAll();
+
+// コンポーザのセット
 setupComposer({
   textarea: tweetInput,
   postButton: postTweetBtn,
@@ -524,7 +714,6 @@ setupComposer({
   preview: imagePreview
 });
 
-// ツイート入力欄（モーダル）
 setupComposer({
   textarea: tweetInputModal,
   postButton: postTweetBtnModal,
@@ -534,11 +723,3 @@ setupComposer({
   preview: imagePreviewModal,
   afterPost: closeModal
 });
-
-// 保存済みツイート＆テーマ読み込み
-loadTweets();
-loadTheme();
-
-// 描画
-renderAllTweetLists();
-renderDmAll();
