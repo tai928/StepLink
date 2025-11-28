@@ -5,7 +5,8 @@
   <title>StepLink</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Supabase JS SDK（必須） -->
+
+  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body data-theme="dark">
@@ -13,22 +14,20 @@
     <!-- 左サイドバー -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
+
       <nav class="nav">
         <a href="#" class="nav-item active" data-page="home">ホーム</a>
         <a href="#" class="nav-item" data-page="messages">メッセージ</a>
         <a href="#" class="nav-item" data-page="profile">プロフィール</a>
       </nav>
 
-      <button id="themeToggle" class="icon-btn theme-toggle" title="テーマ切り替え">
-        🌙
-      </button>
-
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
       <button class="post-button" id="openModalBtn">投稿する</button>
 
       <div class="account-summary">
         <div class="account-main">
           <div class="account-avatar" id="currentUserAvatar">🧑‍💻</div>
-          <div class="account-text">
+          <div>
             <div class="account-name" id="currentUserName">未ログイン</div>
             <div class="account-handle" id="currentUserHandle"></div>
           </div>
@@ -39,11 +38,8 @@
 
     <!-- ホーム -->
     <main class="timeline" id="homePage">
-      <header class="timeline-header">
-        <h1>ホーム</h1>
-      </header>
+      <header class="timeline-header"><h1>ホーム</h1></header>
 
-      <!-- 新規投稿 -->
       <section class="new-post-card">
         <div class="avatar">🧑‍💻</div>
         <div class="new-post-body">
@@ -53,49 +49,41 @@
 
           <div class="new-post-actions">
             <div class="left-actions">
-              <button type="button" class="icon-btn" id="imageSelectBtn">🖼 画像</button>
+              <button class="icon-btn" id="imageSelectBtn">🖼 画像</button>
               <span class="char-counter" id="charCounter">0 / 140</span>
             </div>
             <button id="postTweetBtn">投稿</button>
           </div>
+
           <input type="file" id="imageInput" accept="image/*" hidden />
         </div>
       </section>
 
-      <!-- 投稿一覧 -->
       <section id="tweetsContainer" class="posts"></section>
     </main>
 
-    <!-- メッセージ（仮置き） -->
+    <!-- メッセージ -->
     <main class="timeline hidden" id="messagesPage">
-      <header class="timeline-header">
-        <h1>メッセージ</h1>
-      </header>
-      <section class="placeholder">
-        <p>メッセージ機能は準備中です。</p>
-      </section>
+      <header class="timeline-header"><h1>メッセージ</h1></header>
+      <section class="placeholder"><p>メッセージは準備中です。</p></section>
     </main>
 
     <!-- プロフィール -->
     <main class="timeline hidden" id="profilePage">
-      <header class="timeline-header">
-        <h1>プロフィール</h1>
-      </header>
+      <header class="timeline-header"><h1>プロフィール</h1></header>
 
       <section class="profile-header">
         <div class="profile-banner"></div>
+
         <div class="profile-main">
           <div class="profile-avatar">🧑‍💻</div>
-          <button class="edit-profile-btn" disabled>プロフィール編集（準備中）</button>
         </div>
+
         <div class="profile-info">
           <div class="profile-name" id="profileName">StepLinkユーザー</div>
           <div class="profile-handle" id="profileHandle">@user</div>
-          <div class="profile-bio" id="profileBio">プロフィール情報は順次対応予定です。</div>
+          <div class="profile-bio">プロフィール準備中</div>
         </div>
-        <nav class="profile-tabs">
-          <button class="profile-tab active">投稿</button>
-        </nav>
       </section>
 
       <section id="profileTweetsContainer" class="posts"></section>
@@ -109,6 +97,7 @@
       <header class="modal-header">
         <button id="closeModalBtn" class="icon-btn">✕</button>
       </header>
+
       <section class="new-post-card modal-body">
         <div class="avatar">🧑‍💻</div>
         <div class="new-post-body">
@@ -118,74 +107,49 @@
 
           <div class="new-post-actions">
             <div class="left-actions">
-              <button type="button" class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+              <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
               <span class="char-counter" id="charCounterModal">0 / 140</span>
             </div>
             <button id="postTweetBtnModal">投稿</button>
           </div>
+
           <input type="file" id="imageInputModal" accept="image/*" hidden />
         </div>
       </section>
     </div>
   </div>
 
-  <!-- アカウント切り替えモーダル -->
+  <!-- アカウントモーダル -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
       <header class="modal-header">
         <button id="closeAccountModalBtn" class="icon-btn">✕</button>
       </header>
+
       <div class="modal-body account-modal-body">
         <div class="account-tabs">
           <button class="account-tab active" data-mode="login">ログイン</button>
-          <button class="account-tab" data-mode="register">新規作成</button>
+          <button class="account-tab" data-mode="register">新規登録</button>
         </div>
 
         <!-- ログイン -->
         <div id="accountLoginView">
-          <label>
-            メールアドレス
-            <input id="loginHandleInput" type="email" placeholder="you@example.com" />
-          </label>
-          <label>
-            パスワード
-            <input id="loginPasswordInput" type="password" />
-          </label>
+          <label>メール<input id="loginHandleInput" type="email"></label>
+          <label>パスワード<input id="loginPasswordInput" type="password"></label>
           <button class="primary" id="loginSubmitBtn">ログイン</button>
           <div id="loginError" class="account-error"></div>
-          <div class="account-note">
-            ※勉強用サービスなので、本当の重要なパスワードは使わないでね。
-          </div>
         </div>
 
         <!-- 新規登録 -->
         <div id="accountRegisterView" class="hidden">
-          <label>
-            表示名
-            <input id="regNameInput" type="text" placeholder="たい" />
-          </label>
-          <label>
-            ハンドルネーム（@なし）
-            <input id="regHandleInput" type="text" placeholder="tai" />
-          </label>
-          <label>
-            メールアドレス
-            <input id="regEmailInput" type="email" placeholder="you@example.com" />
-          </label>
-          <label>
-            好きな絵文字（アイコン）
-            <input id="regAvatarInput" type="text" placeholder="🧑‍💻" />
-          </label>
-          <label>
-            パスワード
-            <input id="regPasswordInput" type="password" />
-          </label>
+          <label>名前<input id="regNameInput" type="text"></label>
+          <label>ハンドル（@なし）<input id="regHandleInput" type="text"></label>
+          <label>メール<input id="regEmailInput" type="email"></label>
+          <label>絵文字<input id="regAvatarInput" type="text" placeholder="🧑‍💻"></label>
+          <label>パスワード<input id="regPasswordInput" type="password"></label>
           <button class="primary" id="registerSubmitBtn">アカウント作成</button>
           <div id="registerError" class="account-error"></div>
-          <div class="account-note">
-            ※メールとパスワードはブラウザからSupabaseに送られます。実サービスでは使わない情報にしておいてね。
-          </div>
         </div>
       </div>
     </div>
