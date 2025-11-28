@@ -173,7 +173,10 @@ async function updateCurrentUserUI() {
   const profile = await fetchProfile(user.id);
 
   const name = profile?.name || user.email || "StepLinkユーザー";
-  const handle = profile?.handle || (user.email ? user.email.split("@")[0] : "user");
+  const handle =
+  profile?.handle ||
+  (user.email ? user.email.split("@")[0] : "user");
+
   const avatar = profile?.avatar || "🧑‍💻";
 
   if (currentUserNameEl) currentUserNameEl.textContent = name;
