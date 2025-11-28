@@ -3,10 +3,11 @@
 // ==============================
 
 // ↓自分のSupabaseプロジェクトの値に置き換える
-const SUPABASE_URL = "https://YOUR-PROJECT-ID.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
+const SUPABASE_URL = "https://ngtthuwmqdcxgddlbsyo.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 // ==============================
 // DOM取得
@@ -527,7 +528,3 @@ if (openModalBtn && closeModalBtn && tweetModal) {
   await loadAndRenderTweets();
 })();
 
-const SUPABASE_URL = "https://ngtthuwmqdcxgddlbsyo.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
