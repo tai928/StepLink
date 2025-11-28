@@ -452,3 +452,195 @@ body[data-theme="light"] {
 
 /* モーダル */
 .mo
+
+/* ===== DM (メッセージ) ===== */
+
+.messages-layout {
+  display: flex;
+  border-top: 1px solid var(--border-subtle);
+  min-height: calc(100vh - 52px);
+}
+
+.dm-list {
+  width: 38%;
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-list-header {
+  padding: 12px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.dm-items {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dm-item {
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(239, 243, 244, 0.06);
+}
+
+.dm-item:hover {
+  background: rgba(239, 243, 244, 0.08);
+}
+
+.dm-item.active {
+  background: rgba(29, 155, 240, 0.12);
+}
+
+.dm-item-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body[data-theme="light"] .dm-item-avatar {
+  background: #cfd9de;
+}
+
+.dm-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dm-item-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dm-item-handle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.dm-item-last {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* チャット側 */
+
+.dm-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-chat-header {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.dm-chat-body {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 吹き出し */
+
+.dm-message-row {
+  display: flex;
+}
+
+.dm-message-row.me {
+  justify-content: flex-end;
+}
+
+.dm-message-row.other {
+  justify-content: flex-start;
+}
+
+.dm-message {
+  max-width: 70%;
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.dm-message.me {
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.dm-message.other {
+  background: var(--bg-card);
+  border-bottom-left-radius: 4px;
+}
+
+.dm-message-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* 入力 */
+
+.dm-chat-input {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+#dmInput {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  color: var(--text-main);
+  outline: none;
+  font-size: 14px;
+}
+
+#dmSendBtn {
+  border-radius: 999px;
+  border: none;
+  padding: 8px 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#dmSendBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* SPでは DMリストを少し狭く */
+@media (max-width: 800px) {
+  .messages-layout {
+    flex-direction: column;
+  }
+  .dm-list {
+    width: 100%;
+    max-height: 40vh;
+  }
+  .dm-chat {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
