@@ -187,6 +187,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (accountBackdrop) {
     accountBackdrop.addEventListener("click", closeAccountModal);
   }
+  const bottomAccountBtn = document.getElementById("bottomAccountBtn");
+  if (bottomAccountBtn && accountModal) {
+    bottomAccountBtn.addEventListener("click", openAccountModal);
+  }
 
   // =====================================
   // 🔁 アカウントタブ切り替え（ログイン / 新規登録）
