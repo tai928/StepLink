@@ -14,8 +14,8 @@
   --border-subtle: rgba(239, 243, 244, 0.15);
   --accent: #81b33b;
   --accent-hover: #638b2c;
-  --text-main: #e7e9ea;
-  --text-muted: #71767b;
+  --text-main: #000;
+  --text-muted: #000;
 }
 
 /* ライトテーマ時の変数 */
