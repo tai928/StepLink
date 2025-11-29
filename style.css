@@ -20,14 +20,14 @@
 
 /* ライトテーマ時の変数 */
 body[data-theme="light"] {
-  --bg-main: #ffffff;
-  --bg-card: #f7f9f9;
-  --bg-input: #eff3f4;
-  --border-subtle: rgba(15, 20, 25, 0.15);
+  --bg-main: #f7f5ec;
+  --bg-card: #dad7c9;
+  --bg-input: #fcfcf9;
+  --border-subtle: rgba(239, 243, 244, 0.15);
   --accent: #81b33b;
   --accent-hover: #638b2c;
-  --text-main: #0f1419;
-  --text-muted: #536471;
+  --text-main: #000;
+  --text-muted: #000;
 }
 
 body {
