@@ -3,14 +3,13 @@
 // ==============================
 
 // ★自分の Supabase プロジェクトの値に変えること！★
-const SUPABASE_URL = "https://ngtthuwmqdcxgddlbsyo.supabase.co";
-// Supabase の「プロジェクト設定 > API > Project API keys」にある「anon public」キー
-const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
+const SUPABASE_URL = 'https://ngtthuwmqdcxgddlbsyo.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6';
 
 // CDN 版 @supabase/supabase-js v2 を想定
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-console.log("StepLink script loaded. URL =", SUPABASE_URL);
+console.log('StepLink script loaded. URL = ' + SUPABASE_URL);
 
 // ==============================
 // DOM 要素たち
@@ -86,9 +85,9 @@ const profileTweetsContainer = document.getElementById("profileTweetsContainer")
 // ==============================
 // 状態
 // ==============================
-let currentUser = null;    // Supabase auth user
-let currentProfile = null; // profiles テーブルの1行
-let tweetsCache = [];      // DB から取得したツイート
+let currentUser = null;          // Supabase auth user
+let currentProfile = null;       // profiles テーブルの1行
+let tweetsCache = [];            // 取得したツイート
 
 // ==============================
 // テーマ切り替え
@@ -100,9 +99,8 @@ function initTheme() {
   } else {
     body.setAttribute("data-theme", "dark");
   }
-
-  const now = body.getAttribute("data-theme");
-  themeToggleBtn.textContent = now === "dark" ? "🌙" : "☀️";
+  themeToggleBtn.textContent =
+    body.getAttribute("data-theme") === "dark" ? "🌙" : "☀️";
 }
 
 function toggleTheme() {
@@ -203,14 +201,8 @@ function clearImagePreview(previewEl) {
 }
 
 // ==============================
-// プロフィール upsert（RLS 対策版）
+// プロフィール upsert（RLS 対策）
 // ==============================
-// profiles テーブルのカラム想定:
-// id (uuid, PK, auth.users.id と同じ)
-// display_name text
-// handle text
-// avatar_emoji text
-// updated_at timestamptz
 async function upsertProfile({ display_name, handle, avatar_emoji }) {
   const {
     data: { user },
@@ -223,7 +215,7 @@ async function upsertProfile({ display_name, handle, avatar_emoji }) {
   }
 
   const row = {
-    id: user.id, // 🔑 RLS の条件 auth.uid() = id を満たす
+    id: user.id,                // RLS: auth.uid() = id
     display_name,
     handle,
     avatar_emoji,
@@ -264,7 +256,6 @@ async function refreshCurrentUser() {
 
   currentUser = user;
 
-  // プロフィール取得
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("*")
@@ -305,10 +296,8 @@ function updateUserUI() {
 }
 
 // ==============================
-// ツイート系（tweets テーブル）
+// ツイート系
 // ==============================
-
-// ツイート取得
 async function loadTweets() {
   const { data, error } = await supabase
     .from("tweets")
@@ -337,7 +326,6 @@ async function loadTweets() {
   renderTweets();
 }
 
-// ツイート描画
 function renderTweets() {
   tweetsContainer.innerHTML = "";
   profileTweetsContainer.innerHTML = "";
@@ -346,7 +334,6 @@ function renderTweets() {
     const card = createTweetCard(tweet);
     tweetsContainer.appendChild(card);
 
-    // 自分のプロフィールタブ用
     if (currentUser && tweet.user_id === currentUser.id) {
       const ownCard = createTweetCard(tweet);
       profileTweetsContainer.appendChild(ownCard);
@@ -381,7 +368,7 @@ function createTweetCard(tweet) {
         <button class="icon-btn">❤️</button>
       </div>
     </div>
-  ";
+  `;
 
   const contentEl = card.querySelector(".post-content");
   const textEl = document.createElement("p");
@@ -399,7 +386,6 @@ function createTweetCard(tweet) {
   return card;
 }
 
-// ツイート送信
 async function submitTweet(source) {
   const isModal = source === "modal";
 
@@ -414,7 +400,6 @@ async function submitTweet(source) {
     return;
   }
 
-  // ログインチェック
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -426,12 +411,9 @@ async function submitTweet(source) {
   }
 
   let imageDataUrl = null;
-
   const imgTag = previewEl.querySelector("img");
   if (imgTag) {
-    // 今回は簡単に base64 をそのまま DB に保存
-    // 本当は Storage を使った方がいい
-    imageDataUrl = imgTag.src;
+    imageDataUrl = imgTag.src; // 本当は Storage 推奨だけど、今は簡易実装
   }
 
   const { error } = await supabase.from("tweets").insert({
@@ -455,7 +437,6 @@ async function submitTweet(source) {
     closeTweetModal();
   }
 
-  // 再読み込み
   await loadTweets();
 }
 
@@ -478,7 +459,6 @@ function setupEvents() {
   // 投稿モーダル
   openModalBtn.addEventListener("click", openTweetModal);
   closeModalBtn.addEventListener("click", closeTweetModal);
-
   tweetModal
     .querySelector(".modal-backdrop")
     .addEventListener("click", closeTweetModal);
@@ -486,7 +466,6 @@ function setupEvents() {
   // アカウントモーダル
   switchAccountBtn.addEventListener("click", openAccountModal);
   closeAccountModalBtn.addEventListener("click", closeAccountModal);
-
   accountModal
     .querySelector(".modal-backdrop")
     .addEventListener("click", closeAccountModal);
@@ -567,7 +546,6 @@ function setupEvents() {
       return;
     }
 
-    // 1️⃣ サインアップ
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -580,14 +558,12 @@ function setupEvents() {
     }
 
     try {
-      // 2️⃣ プロフィール upsert（ここで RLS を満たす）
       await upsertProfile({
         display_name: name,
         handle,
         avatar_emoji: avatar,
       });
 
-      // ユーザー情報更新
       await refreshCurrentUser();
       await loadTweets();
       closeAccountModal();
@@ -610,5 +586,4 @@ async function init() {
   await loadTweets();
 }
 
-// script.js が body の一番最後で読み込まれている前提
 init();
