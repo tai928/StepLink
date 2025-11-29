@@ -25,22 +25,17 @@ body {
   color: var(--text-main);
 }
 
-/* モバイル基準：縦並びレイアウト */
 .app {
-  display: block;
   min-height: 100vh;
 }
 
 /* ===========================
-   左サイドバー（PCでだけ表示）
+   左サイドバー（PCメイン）
 =========================== */
 .sidebar-left {
-  display: none; /* モバイルでは非表示 */
+  display: none; /* モバイルでは非表示、PCで後から出す */
 }
 
-/* ===========================
-   サイドバー内パーツ
-=========================== */
 .logo {
   font-size: 22px;
   font-weight: bold;
@@ -141,7 +136,7 @@ body {
 main.timeline {
   max-width: 600px;
   margin: 0 auto;
-  padding: 20px 16px 96px;  /* 下ナビ分の余白をあらかじめ確保 */
+  padding: 20px 16px 96px;  /* 下ナビ分の余白込み（モバイル基準） */
 }
 
 .timeline-header {
@@ -401,11 +396,10 @@ textarea {
   height: 56px;
   background: #ffffff;
   border-top: 1px solid #e0e0e0;
-  display: flex;  /* モバイルで表示 */
+  display: flex;  /* モバイルでは表示 */
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
-
   padding-bottom: env(safe-area-inset-bottom, 0);
   box-sizing: content-box;
 }
@@ -440,20 +434,34 @@ textarea {
 }
 
 /* ===========================
-   PCレイアウト（1024px以上）
-   ─ ここからPC表示に切り替え ─
+   スマホ調整（〜767px）
 =========================== */
-@media (min-width: 1024px) {
-
-  /* 全体：PCでは横に広いコンテナを中央寄せ */
-  .app {
-    display: block;   /* サイドバーは position:fixed なのでここは block でOK */
-    max-width: 1200px;
-    margin: 0 auto;
-    min-height: 100vh;
+@media (max-width: 767px) {
+  .sidebar-left {
+    display: none;
   }
 
-  /* サイドバーを左に固定表示 */
+  .app {
+    display: block;
+  }
+
+  main.timeline {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px 12px 96px;
+  }
+}
+
+/* ===========================
+   PCレイアウト（768px〜）
+=========================== */
+@media (min-width: 768px) {
+  .app {
+    display: flex;
+    max-width: 1100px;  /* サイドバー + カラムでちょうどいい幅 */
+    margin: 0 auto;
+  }
+
   .sidebar-left {
     display: flex;
     flex-direction: column;
@@ -467,15 +475,14 @@ textarea {
     border-right: 1px solid #ddd;
   }
 
-  /* タイムラインは「画面中央」に置く（サイドバーの幅は無視して中央寄せ） */
   main.timeline {
     max-width: 700px;
-    margin: 0 auto;              /* 画面の真ん中にドン */
-    padding: 32px 24px 40px;     /* 上下左右の余白 */
+    margin: 0 auto;
+    margin-left: 260px; /* サイドバー + 少し余白 */
+    padding: 32px 24px 40px;
   }
 
-  /* PCでは下のナビバーは非表示 */
   .bottom-nav {
-    display: none;
+    display: none; /* PCでは下ナビ非表示 */
   }
 }
