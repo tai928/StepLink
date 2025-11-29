@@ -440,40 +440,41 @@ textarea {
 }
 
 /* ===========================
-   PCレイアウト（768px以上）
+   PCレイアウト（1024px以上）
+   ─ ここからPC表示に切り替え ─
 =========================== */
-@media (min-width: 768px) {
-  /* 画面全体の横幅をコントロール（中央に寄せる） */
+@media (min-width: 1024px) {
+
+  /* 全体：PCでは横に広いコンテナを中央寄せ */
   .app {
-    display: flex;
-    max-width: 1100px;   /* サイドバー + タイムライン分くらい */
-    margin: 0 auto;      /* 画面中央に配置 */
+    display: block;   /* サイドバーは position:fixed なのでここは block でOK */
+    max-width: 1200px;
+    margin: 0 auto;
     min-height: 100vh;
   }
 
-  /* サイドバーを左に固定カラムとして表示 */
+  /* サイドバーを左に固定表示 */
   .sidebar-left {
     display: flex;
     flex-direction: column;
-    position: sticky;    /* ページ上部で固定（fixedより扱いやすい） */
+    position: fixed;
+    left: 0;
     top: 0;
-    align-self: flex-start;
-    width: 240px;
+    bottom: 0;
+    width: 220px;
     padding: 20px;
     background: #f5f5f5;
     border-right: 1px solid #ddd;
-    height: 100vh;
   }
 
-  /* タイムラインは「残りの幅」で中央寄せ */
+  /* タイムラインは「画面中央」に置く（サイドバーの幅は無視して中央寄せ） */
   main.timeline {
-    flex: 1;
-    max-width: 700px;      /* カラム幅 */
-    margin: 0 auto;        /* カラム自体を中央寄せ */
-    padding: 24px 24px 40px;
+    max-width: 700px;
+    margin: 0 auto;              /* 画面の真ん中にドン */
+    padding: 32px 24px 40px;     /* 上下左右の余白 */
   }
 
-  /* PCでは下ナビを消す */
+  /* PCでは下のナビバーは非表示 */
   .bottom-nav {
     display: none;
   }
