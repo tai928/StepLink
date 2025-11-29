@@ -8,28 +8,102 @@
 </head>
 <body>
   <div class="app">
-    <!-- サイドバー（profile.html と完全に同じにしてね） -->
+    <!-- サイドバー（index / profile と同じ構成にする） -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
 
       <nav class="nav">
-        <a href="index.html" class="nav-item active">ホーム</a>
-        <a href="messages.html" class="nav-item">メッセージ</a>
+        <a href="index.html" class="nav-item">ホーム</a>
+        <a href="messages.html" class="nav-item active">メッセージ</a>
         <a href="profile.html" class="nav-item">プロフィール</a>
       </nav>
 
-      <!-- テーマボタンは見た目だけの飾りでもOK -->
+      <!-- テーマ切り替え（見た目だけでもOK） -->
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
 
-    <!-- タイムライン -->
+      <!-- 投稿モーダルを開くボタン（ホーム以外からも投稿できるように） -->
+      <button class="post-button" id="openModalBtn">投稿する</button>
+
+      <div class="account-summary">
+        <div class="account-main">
+          <div class="account-avatar" id="currentUserAvatar">🧑‍💻</div>
+          <div>
+            <div class="account-name" id="currentUserName">未ログイン</div>
+            <div class="account-handle" id="currentUserHandle"></div>
+          </div>
+        </div>
+        <button class="icon-btn small" id="switchAccountBtn">アカウント</button>
+      </div>
+
+      <!-- ログアウトボタン（作ってなかったら消してもOK / script.js 側はnullチェック済） -->
+      <button class="logout-button" id="logoutBtn">ログアウト</button>
+    </aside>
+
+    <!-- メッセージページ本体 -->
     <main class="timeline">
       <header class="timeline-header">
-        <h1>ホーム</h1>
+        <h1>メッセージ</h1>
       </header>
 
-<h2>何もないんだなこれが。</h2>
-    
+      <!-- ここはあとでDM機能実装するときに差し替える想定 -->
+      <section class="new-post-card">
+        <div class="avatar">💬</div>
+        <div class="new-post-body">
+          <p>ダイレクトメッセージ機能は準備中です。</p>
+          <p style="color:#777; font-size:14px; margin-top:6px;">
+            まずはホームで投稿して、メッセージ機能はあとで一緒に作ろうね。
+          </p>
+        </div>
+      </section>
 
-  <!-- アカウントモーダル（profile.html と同じ） -->
+      <section class="posts">
+        <article class="post">
+          <div class="post-avatar">🤝</div>
+          <div class="post-body">
+            <div class="post-header">
+              <span class="post-name">StepLink</span>
+              <span class="post-handle">@system</span>
+              <span class="post-time">メッセージ案内</span>
+            </div>
+            <div class="post-text">
+              ここには将来、友だちとのDMスレッドやチャット履歴が並ぶ予定だよ。
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <!-- 投稿モーダル（index.html と同じ構造） -->
+  <div id="tweetModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <button id="closeModalBtn" class="icon-btn">✕</button>
+      </header>
+
+      <section class="new-post-card modal-body">
+        <div class="avatar">🧑‍💻</div>
+        <div class="new-post-body">
+          <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
+
+          <div class="image-preview" id="imagePreviewModal"></div>
+
+          <div class="new-post-actions">
+            <div class="left-actions">
+              <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+              <span class="char-counter" id="charCounterModal">0 / 140</span>
+            </div>
+            <button id="postTweetBtnModal">投稿</button>
+          </div>
+
+          <input type="file" id="imageInputModal" accept="image/*" hidden />
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- アカウントモーダル（index / profile と共通） -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -65,7 +139,7 @@
     </div>
   </div>
 
-  <!-- Supabase → script.js の順番で読み込み -->
+  <!-- Supabase → script.js の順で読み込み -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
 </body>
