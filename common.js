@@ -1,36 +1,28 @@
 // ==============================
 // Supabase 初期化
 // ==============================
+
+// ★ここ、自分のプロジェクトに書き換えてね
 const SUPABASE_URL = "https://ngtthuwmqdcxgddlbsyo.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
+
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // ------------------------------
+  // 共通で使うログイン中ユーザー情報
+  // ------------------------------
+  let currentUser = null;
+  let currentProfile = null;
 
-  // ==============================
-  // ログイン状態の確認 & UI更新
-  // ==============================
-  const {
-    data: { user },
-  } = await supabaseClient.auth.getUser();
-
-  if (user) {
-    const name = user.user_metadata.name || "ユーザー";
-    const handle = user.user_metadata.handle || "user";
-    const avatar = user.user_metadata.avatar || "🧑‍💻";
-
-    // 左下UI
-    document.getElementById("currentUserName").textContent = name;
-    document.getElementById("currentUserHandle").textContent = "@" + handle;
-    document.getElementById("currentUserAvatar").textContent = avatar;
-  }
-
-  // ==============================
-  // ✨ テーマ切替
-  // ==============================
+  // =====================================
+  // 🌙 テーマ切り替え
+  // =====================================
   const themeToggleBtn = document.getElementById("themeToggle");
   const savedTheme = localStorage.getItem("steplink-theme");
-  if (savedTheme) document.body.setAttribute("data-theme", savedTheme);
+  if (savedTheme === "light" || savedTheme === "dark") {
+    document.body.setAttribute("data-theme", savedTheme);
+  }
 
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", () => {
@@ -41,36 +33,119 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ==============================
-  // ✨ アカウントモーダル開閉
-  // ==============================
+  // =====================================
+  // 👤 ログイン状態の初期チェック
+  // =====================================
+  async function loadAuthState() {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error) {
+      console.error("getUser error:", error);
+      applyUserUI(null, null);
+      return;
+    }
+    if (!data.user) {
+      applyUserUI(null, null);
+      return;
+    }
+
+    currentUser = data.user;
+
+    // profiles テーブルからプロフィール取得（なければメタデータ）
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("name, handle, avatar, bio")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (profileError && profileError.code !== "PGRST116") {
+      console.error("プロフィール取得エラー:", profileError);
+    }
+
+    currentProfile = profileData || null;
+    applyUserUI(currentUser, currentProfile);
+  }
+
+  // =====================================
+  // 👤 ログイン情報をUIに反映
+  // =====================================
+  function applyUserUI(user, profile) {
+    const nameEl = document.getElementById("currentUserName");
+    const handleEl = document.getElementById("currentUserHandle");
+    const avatarEl = document.getElementById("currentUserAvatar");
+
+    const profileNameEl = document.getElementById("profileName");
+    const profileHandleEl = document.getElementById("profileHandle");
+    const profileBioEl = document.querySelector(".profile-bio");
+
+    if (!user) {
+      if (nameEl) nameEl.textContent = "未ログイン";
+      if (handleEl) handleEl.textContent = "";
+      if (avatarEl) avatarEl.textContent = "🧑‍💻";
+
+      if (profileNameEl) profileNameEl.textContent = "StepLinkユーザー";
+      if (profileHandleEl) profileHandleEl.textContent = "@user";
+      if (profileBioEl) profileBioEl.textContent = "プロフィール準備中";
+      return;
+    }
+
+    const name =
+      profile?.name || user.user_metadata?.name || "StepLinkユーザー";
+    const handle =
+      profile?.handle || user.user_metadata?.handle || "user";
+    const avatar =
+      profile?.avatar || user.user_metadata?.avatar || "🧑‍💻";
+    const bio = profile?.bio || "プロフィールはまだ書かれていません";
+
+    if (nameEl) nameEl.textContent = name;
+    if (handleEl) handleEl.textContent = "@" + handle;
+    if (avatarEl) avatarEl.textContent = avatar;
+
+    if (profileNameEl) profileNameEl.textContent = name;
+    if (profileHandleEl) profileHandleEl.textContent = "@" + handle;
+    if (profileBioEl) profileBioEl.textContent = bio;
+  }
+
+  await loadAuthState();
+
+  // =====================================
+  // 🧾 アカウントモーダル開閉
+  // =====================================
   const accountModal = document.getElementById("accountModal");
   const switchAccountBtn = document.getElementById("switchAccountBtn");
   const closeAccountModalBtn = document.getElementById("closeAccountModalBtn");
   const accountBackdrop = accountModal?.querySelector(".modal-backdrop");
 
   function openAccountModal() {
-    accountModal.classList.remove("hidden");
+    if (accountModal) accountModal.classList.remove("hidden");
   }
   function closeAccountModal() {
-    accountModal.classList.add("hidden");
+    if (accountModal) accountModal.classList.add("hidden");
   }
 
-  if (switchAccountBtn) switchAccountBtn.addEventListener("click", openAccountModal);
-  if (closeAccountModalBtn) closeAccountModalBtn.addEventListener("click", closeAccountModal);
-  if (accountBackdrop) accountBackdrop.addEventListener("click", closeAccountModal);
+  if (switchAccountBtn && accountModal) {
+    switchAccountBtn.addEventListener("click", openAccountModal);
+  }
+  if (closeAccountModalBtn) {
+    closeAccountModalBtn.addEventListener("click", closeAccountModal);
+  }
+  if (accountBackdrop) {
+    accountBackdrop.addEventListener("click", closeAccountModal);
+  }
 
-  // ==============================
-  // ✨ アカウントタブ切替（ログイン/新規）
-  // ==============================
+  // =====================================
+  // 🔁 アカウントタブ切り替え（ログイン / 新規登録）
+  // =====================================
   const accountTabs = document.querySelectorAll(".account-tab");
   const accountLoginView = document.getElementById("accountLoginView");
   const accountRegisterView = document.getElementById("accountRegisterView");
 
   function switchAccountTab(mode) {
-    accountTabs.forEach((t) =>
-      t.classList.toggle("active", t.dataset.mode === mode)
-    );
+    accountTabs.forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.mode === mode);
+    });
+
+    if (!accountLoginView || !accountRegisterView) return;
+
     if (mode === "login") {
       accountLoginView.classList.remove("hidden");
       accountRegisterView.classList.add("hidden");
@@ -80,13 +155,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  accountTabs.forEach((t) =>
-    t.addEventListener("click", () => switchAccountTab(t.dataset.mode))
-  );
+  accountTabs.forEach((tab) => {
+    tab.addEventListener("click", () => switchAccountTab(tab.dataset.mode));
+  });
 
-  // ==============================
-  // ✨ Supabase 新規登録
-  // ==============================
+  // =====================================
+  // 🆕 新規登録（signUp + profiles保存）
+  // =====================================
   const regNameInput = document.getElementById("regNameInput");
   const regHandleInput = document.getElementById("regHandleInput");
   const regEmailInput = document.getElementById("regEmailInput");
@@ -95,83 +170,130 @@ document.addEventListener("DOMContentLoaded", async () => {
   const registerError = document.getElementById("registerError");
   const registerSubmitBtn = document.getElementById("registerSubmitBtn");
 
-  if (registerSubmitBtn) {
-    registerSubmitBtn.addEventListener("click", async () => {
-      const name = regNameInput.value;
-      const handle = regHandleInput.value;
-      const email = regEmailInput.value;
-      const avatar = regAvatarInput.value || "🧑‍💻";
-      const password = regPasswordInput.value;
+  async function handleRegister() {
+    if (!regNameInput || !regHandleInput || !regEmailInput || !regPasswordInput) return;
 
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name, handle, avatar },
-        },
-      });
+    const name = regNameInput.value.trim();
+    const handle = regHandleInput.value.trim();
+    const email = regEmailInput.value.trim();
+    const avatar = (regAvatarInput?.value.trim() || "🧑‍💻").trim();
+    const password = regPasswordInput.value;
 
-      if (error) {
+    if (!name || !handle || !email || !password) {
+      if (registerError) registerError.textContent = "必須項目が空だよ🥺";
+      return;
+    }
+
+    if (registerError) registerError.textContent = "";
+
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name, handle, avatar },
+      },
+    });
+
+    if (error) {
+      console.error("signUp error:", error);
+      if (registerError) {
         if (error.message.includes("User already registered")) {
-          registerError.textContent = "このメールは登録済みだよ🥺 ログインしてね。";
+          registerError.textContent = "このメールは登録済みだよ。ログインしてね。";
           switchAccountTab("login");
         } else {
           registerError.textContent = error.message;
         }
-        return;
       }
+      return;
+    }
 
-      alert("アカウント作成できたよ💚 ログインしてみてね！");
-      switchAccountTab("login");
-    });
+    const user = data.user;
+    if (user) {
+      // profiles にも保存（RLS OFF前提）
+      const { error: profileErr } = await supabaseClient
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          name,
+          handle,
+          avatar,
+        });
+
+      if (profileErr) {
+        console.error("profiles upsert error:", profileErr);
+      }
+    }
+
+    alert("アカウント作成できたよ💚 ログインしてね！");
+    switchAccountTab("login");
   }
 
-  // ==============================
-  // ✨ Supabase ログイン処理
-  // ==============================
+  if (registerSubmitBtn) {
+    registerSubmitBtn.addEventListener("click", handleRegister);
+  }
+
+  // =====================================
+  // 🔐 ログイン
+  // =====================================
   const loginHandleInput = document.getElementById("loginHandleInput");
   const loginPasswordInput = document.getElementById("loginPasswordInput");
   const loginError = document.getElementById("loginError");
   const loginSubmitBtn = document.getElementById("loginSubmitBtn");
 
+  async function handleLogin() {
+    if (!loginHandleInput || !loginPasswordInput) return;
+
+    const email = loginHandleInput.value.trim();
+    const password = loginPasswordInput.value;
+
+    if (!email || !password) {
+      if (loginError) loginError.textContent = "メールとパスワードを入れてね🥺";
+      return;
+    }
+
+    if (loginError) loginError.textContent = "";
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("signIn error:", error);
+      if (loginError) loginError.textContent = error.message;
+      return;
+    }
+
+    // ログイン成功 → 状態を更新したいのでリロード
+    location.reload();
+  }
+
   if (loginSubmitBtn) {
-    loginSubmitBtn.addEventListener("click", async () => {
-      const email = loginHandleInput.value;
-      const password = loginPasswordInput.value;
+    loginSubmitBtn.addEventListener("click", handleLogin);
+  }
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        loginError.textContent = error.message;
-        return;
-      }
-
-      // ページの情報更新のため再読み込み
+  // =====================================
+  // 🚪 ログアウト（左下の名前をダブルクリックでログアウト）
+  // =====================================
+  const currentUserNameEl = document.getElementById("currentUserName");
+  if (currentUserNameEl) {
+    currentUserNameEl.addEventListener("dblclick", async () => {
+      await supabaseClient.auth.signOut();
       location.reload();
     });
   }
 
-  // ==============================
-  // ✨ ログアウト
-  // ==============================
-  document.getElementById("currentUserName")?.addEventListener("dblclick", async () => {
-    await supabaseClient.auth.signOut();
-    location.reload();
-  });
-
-  // ==============================
-  // ✨ 以下：投稿・モーダルは前と同じ（フロントのみ）
-  // ==============================
-
+  // =====================================
+  // ✏️ 文字数カウンター
+  // =====================================
   function updateCounter(input, counter) {
     if (!input || !counter) return;
     counter.textContent = `${input.value.length} / 140`;
   }
 
-  // ホーム投稿系
+  // =====================================
+  // 📝 ホーム投稿（フロントのみ）
+  // =====================================
   const tweetInput = document.getElementById("tweetInput");
   const charCounter = document.getElementById("charCounter");
   const imageSelectBtn = document.getElementById("imageSelectBtn");
@@ -180,19 +302,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   const postTweetBtn = document.getElementById("postTweetBtn");
   const tweetsContainer = document.getElementById("tweetsContainer");
 
-  if (tweetInput) {
+  if (tweetInput && charCounter) {
     updateCounter(tweetInput, charCounter);
-    tweetInput.addEventListener("input", () => updateCounter(tweetInput, charCounter));
+    tweetInput.addEventListener("input", () =>
+      updateCounter(tweetInput, charCounter)
+    );
   }
 
-  if (imageSelectBtn) {
+  if (imageSelectBtn && imageInput && imagePreview) {
     imageSelectBtn.addEventListener("click", () => imageInput.click());
     imageInput.addEventListener("change", () => {
       const file = imageInput.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        imagePreview.innerHTML = `<img src="${e.target.result}" />`;
+        imagePreview.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        imagePreview.appendChild(img);
       };
       reader.readAsDataURL(file);
     });
@@ -201,44 +328,123 @@ document.addEventListener("DOMContentLoaded", async () => {
   function addTweet(text) {
     if (!tweetsContainer) return;
 
+    // 表示名・ハンドルをログイン情報に合わせる
+    const name =
+      currentProfile?.name ||
+      currentUser?.user_metadata?.name ||
+      "StepLinkユーザー";
+    const handle =
+      currentProfile?.handle ||
+      currentUser?.user_metadata?.handle ||
+      "user";
+    const avatar =
+      currentProfile?.avatar ||
+      currentUser?.user_metadata?.avatar ||
+      "🧑‍💻";
+
     const article = document.createElement("article");
     article.className = "post";
     article.innerHTML = `
-      <div class="post-avatar">🧑‍💻</div>
+      <div class="post-avatar">${avatar}</div>
       <div class="post-body">
         <div class="post-header">
-          <span class="post-name">StepLinkユーザー</span>
-          <span class="post-handle">@user</span>
+          <span class="post-name">${name}</span>
+          <span class="post-handle">@${handle}</span>
           <span class="post-time">今</span>
         </div>
-        <div class="post-text">${text}</div>
+        <div class="post-text"></div>
       </div>
     `;
+    article.querySelector(".post-text").textContent = text;
+
     tweetsContainer.prepend(article);
   }
 
-  if (postTweetBtn) {
+  if (postTweetBtn && tweetInput) {
     postTweetBtn.addEventListener("click", () => {
-      if (!tweetInput.value.trim()) return;
-      addTweet(tweetInput.value.trim());
+      const text = tweetInput.value.trim();
+      if (!text) return;
+      if (text.length > 140) {
+        alert("140文字までだよ🥺");
+        return;
+      }
+      addTweet(text);
       tweetInput.value = "";
-      updateCounter(tweetInput, charCounter);
-      imagePreview.innerHTML = "";
+      if (charCounter) updateCounter(tweetInput, charCounter);
+      if (imagePreview) imagePreview.innerHTML = "";
     });
   }
 
-  // モーダル（投稿）
+  // =====================================
+  // 📝 モーダルからの投稿（ホームにtweetsContainerがある前提）
+  // =====================================
   const tweetModal = document.getElementById("tweetModal");
   const openModalBtn = document.getElementById("openModalBtn");
   const closeModalBtn = document.getElementById("closeModalBtn");
+  const tweetModalBackdrop = tweetModal?.querySelector(".modal-backdrop");
+
+  const tweetInputModal = document.getElementById("tweetInputModal");
+  const charCounterModal = document.getElementById("charCounterModal");
+  const imageSelectBtnModal = document.getElementById("imageSelectBtnModal");
+  const imageInputModal = document.getElementById("imageInputModal");
+  const imagePreviewModal = document.getElementById("imagePreviewModal");
+  const postTweetBtnModal = document.getElementById("postTweetBtnModal");
 
   function openTweetModal() {
-    tweetModal.classList.remove("hidden");
+    if (tweetModal) tweetModal.classList.remove("hidden");
   }
   function closeTweetModal() {
-    tweetModal.classList.add("hidden");
+    if (tweetModal) tweetModal.classList.add("hidden");
   }
 
-  if (openModalBtn) openModalBtn.addEventListener("click", openTweetModal);
-  if (closeModalBtn) closeModalBtn.addEventListener("click", closeTweetModal);
+  if (openModalBtn && tweetModal) {
+    openModalBtn.addEventListener("click", openTweetModal);
+  }
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener("click", closeTweetModal);
+  }
+  if (tweetModalBackdrop) {
+    tweetModalBackdrop.addEventListener("click", closeTweetModal);
+  }
+
+  if (tweetInputModal && charCounterModal) {
+    updateCounter(tweetInputModal, charCounterModal);
+    tweetInputModal.addEventListener("input", () =>
+      updateCounter(tweetInputModal, charCounterModal)
+    );
+  }
+
+  if (imageSelectBtnModal && imageInputModal && imagePreviewModal) {
+    imageSelectBtnModal.addEventListener("click", () =>
+      imageInputModal.click()
+    );
+    imageInputModal.addEventListener("change", () => {
+      const file = imageInputModal.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreviewModal.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        imagePreviewModal.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (postTweetBtnModal && tweetInputModal) {
+    postTweetBtnModal.addEventListener("click", () => {
+      const text = tweetInputModal.value.trim();
+      if (!text) return;
+      if (text.length > 140) {
+        alert("140文字までだよ🥺");
+        return;
+      }
+      addTweet(text);
+      tweetInputModal.value = "";
+      if (charCounterModal) updateCounter(tweetInputModal, charCounterModal);
+      if (imagePreviewModal) imagePreviewModal.innerHTML = "";
+      closeTweetModal();
+    });
+  }
 });
