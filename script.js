@@ -339,6 +339,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       location.reload();
     });
   }
+  // ⭐ ログアウトボタン
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    location.reload();
+  });
+}
+
 
   // =====================================
   // ✏️ 文字数カウンター
