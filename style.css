@@ -498,6 +498,26 @@ textarea {
     display: none;
   }
    /* ===========================
+   PC では左サイドバーを必ず表示
+=========================== */
+@media (min-width: 769px) {
+  .sidebar-left {
+    display: block !important;
+    width: 220px !important;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+  }
+
+  .timeline {
+    margin-left: 260px !important; /* サイドバー分あける */
+    max-width: 900px;
+    padding: 20px 32px;
+  }
+}
+
+   /* ===========================
    PC で投稿カラムをもっと横長にする
 =========================== */
 
