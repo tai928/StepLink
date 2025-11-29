@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>StepLink - プロフィール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="dark">
+  <div class="app">
+    <aside class="sidebar-left">
+      <div class="logo">StepLink</div>
+
+      <nav class="nav">
+        <a href="index.html" class="nav-item">ホーム</a>
+        <a href="messages.html" class="nav-item">メッセージ</a>
+        <a href="profile.html" class="nav-item active">プロフィール</a>
+      </nav>
+
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
+      <button class="post-button" id="openModalBtn">投稿する</button>
+
+      <div class="account-summary">
+        <div class="account-main">
+          <div class="account-avatar" id="currentUserAvatar">🧑‍💻</div>
+          <div>
+            <div class="account-name" id="currentUserName">未ログイン</div>
+            <div class="account-handle" id="currentUserHandle"></div>
+          </div>
+        </div>
+        <button class="icon-btn small" id="switchAccountBtn">アカウント</button>
+      </div>
+    </aside>
+
+    <main class="timeline">
+      <header class="timeline-header"><h1>プロフィール</h1></header>
+
+      <section class="profile-header">
+        <div class="profile-banner"></div>
+
+        <div class="profile-main">
+          <div class="profile-avatar">🧑‍💻</div>
+        </div>
+
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">StepLinkユーザー</div>
+          <div class="profile-handle" id="profileHandle">@user</div>
+          <div class="profile-bio">プロフィール準備中</div>
+        </div>
+      </section>
+
+      <section id="profileTweetsContainer" class="posts"></section>
+    </main>
+  </div>
+
+  <!-- モーダルたち（共通） -->
+  <div id="tweetModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <button id="closeModalBtn" class="icon-btn">✕</button>
+      </header>
+
+      <section class="new-post-card modal-body">
+        <div class="avatar">🧑‍💻</div>
+        <div class="new-post-body">
+          <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
+
+          <div class="image-preview" id="imagePreviewModal"></div>
+
+          <div class="new-post-actions">
+            <div class="left-actions">
+              <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+              <span class="char-counter" id="charCounterModal">0 / 140</span>
+            </div>
+            <button id="postTweetBtnModal">投稿</button>
+          </div>
+
+          <input type="file" id="imageInputModal" accept="image/*" hidden />
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="accountModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <button id="closeAccountModalBtn" class="icon-btn">✕</button>
+      </header>
+
+      <div class="modal-body account-modal-body">
+        <div class="account-tabs">
+          <button class="account-tab active" data-mode="login">ログイン</button>
+          <button class="account-tab" data-mode="register">新規登録</button>
+        </div>
+
+        <div id="accountLoginView">
+          <label>メール<input id="loginHandleInput" type="email"></label>
+          <label>パスワード<input id="loginPasswordInput" type="password"></label>
+          <button class="primary" id="loginSubmitBtn">ログイン</button>
+          <div id="loginError" class="account-error"></div>
+        </div>
+
+        <div id="accountRegisterView" class="hidden">
+          <label>名前<input id="regNameInput" type="text"></label>
+          <label>ハンドル（@なし）<input id="regHandleInput" type="text"></label>
+          <label>メール<input id="regEmailInput" type="email"></label>
+          <label>絵文字<input id="regAvatarInput" type="text" placeholder="🧑‍💻"></label>
+          <label>パスワード<input id="regPasswordInput" type="password"></label>
+          <button class="primary" id="registerSubmitBtn">アカウント作成</button>
+          <div id="registerError" class="account-error"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+</body>
+</html>
