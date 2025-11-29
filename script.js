@@ -2,17 +2,17 @@
 // Supabase 設定
 // ==============================
 
-// ★自分の Supabase プロジェクトの値に変えること！★
-const SUPABASE_URL = 'https://ngtthuwmqdcxgddlbsyo.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6';
+// ★ここは自分の Supabase プロジェクトの値にしておいてね
+const SUPABASE_URL = "https://ngtthuwmqdcxgddlbsyo.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
 
-// CDN 版 @supabase/supabase-js v2 を想定
+// CDN 版 supabase-js v2 を想定
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-console.log('StepLink script loaded. URL = ' + SUPABASE_URL);
+console.log("StepLink script loaded. URL =", SUPABASE_URL);
 
 // ==============================
-// DOM 要素たち
+// DOM 要素
 // ==============================
 const body = document.body;
 
@@ -85,12 +85,12 @@ const profileTweetsContainer = document.getElementById("profileTweetsContainer")
 // ==============================
 // 状態
 // ==============================
-let currentUser = null;          // Supabase auth user
-let currentProfile = null;       // profiles テーブルの1行
-let tweetsCache = [];            // 取得したツイート
+let currentUser = null;     // Supabase auth.user
+let currentProfile = null;  // profiles テーブルの行
+let tweetsCache = [];       // 取得したツイート
 
 // ==============================
-// テーマ切り替え
+// テーマ
 // ==============================
 function initTheme() {
   const saved = localStorage.getItem("steplink-theme");
@@ -99,36 +99,32 @@ function initTheme() {
   } else {
     body.setAttribute("data-theme", "dark");
   }
-  if (themeToggleBtn) {
-    themeToggleBtn.textContent =
-      body.getAttribute("data-theme") === "dark" ? "🌙" : "☀️";
-  }
+  themeToggleBtn.textContent =
+    body.getAttribute("data-theme") === "dark" ? "🌙" : "☀️";
 }
 
 function toggleTheme() {
   const now = body.getAttribute("data-theme") === "dark" ? "light" : "dark";
   body.setAttribute("data-theme", now);
   localStorage.setItem("steplink-theme", now);
-  if (themeToggleBtn) {
-    themeToggleBtn.textContent = now === "dark" ? "🌙" : "☀️";
-  }
+  themeToggleBtn.textContent = now === "dark" ? "🌙" : "☀️";
 }
 
 // ==============================
 // ページ切り替え
 // ==============================
 function showPage(page) {
-  if (homePage) homePage.classList.add("hidden");
-  if (messagesPage) messagesPage.classList.add("hidden");
-  if (profilePage) profilePage.classList.add("hidden");
+  homePage.classList.add("hidden");
+  messagesPage.classList.add("hidden");
+  profilePage.classList.add("hidden");
 
   navItems.forEach((item) => item.classList.remove("active"));
 
-  if (page === "home" && homePage) {
+  if (page === "home") {
     homePage.classList.remove("hidden");
-  } else if (page === "messages" && messagesPage) {
+  } else if (page === "messages") {
     messagesPage.classList.remove("hidden");
-  } else if (page === "profile" && profilePage) {
+  } else if (page === "profile") {
     profilePage.classList.remove("hidden");
   }
 
@@ -137,39 +133,34 @@ function showPage(page) {
 }
 
 // ==============================
-// モーダルの開閉
+// モーダル
 // ==============================
 function openTweetModal() {
-  if (!tweetModal) return;
   tweetModal.classList.remove("hidden");
 }
 
 function closeTweetModal() {
-  if (!tweetModal) return;
   tweetModal.classList.add("hidden");
-  if (tweetInputModal) tweetInputModal.value = "";
-  if (charCounterModal) charCounterModal.textContent = "0 / 140";
-  if (imagePreviewModal) clearImagePreview(imagePreviewModal);
-  if (imageInputModal) imageInputModal.value = "";
+  tweetInputModal.value = "";
+  charCounterModal.textContent = "0 / 140";
+  clearImagePreview(imagePreviewModal);
+  imageInputModal.value = "";
 }
 
 function openAccountModal() {
-  if (!accountModal) return;
   accountModal.classList.remove("hidden");
 }
 
 function closeAccountModal() {
-  if (!accountModal) return;
   accountModal.classList.add("hidden");
-  if (loginError) loginError.textContent = "";
-  if (registerError) registerError.textContent = "";
+  loginError.textContent = "";
+  registerError.textContent = "";
 }
 
 // ==============================
-// 入力文字数カウンタ
+// 文字数カウンタ
 // ==============================
 function updateCharCounter(textarea, counterEl) {
-  if (!textarea || !counterEl) return;
   const len = textarea.value.length;
   counterEl.textContent = `${len} / 140`;
   if (len > 140) {
@@ -183,8 +174,6 @@ function updateCharCounter(textarea, counterEl) {
 // 画像プレビュー
 // ==============================
 function setUpImageSelector(buttonEl, inputEl, previewEl) {
-  if (!buttonEl || !inputEl || !previewEl) return;
-
   buttonEl.addEventListener("click", () => {
     inputEl.click();
   });
@@ -208,7 +197,6 @@ function setUpImageSelector(buttonEl, inputEl, previewEl) {
 }
 
 function clearImagePreview(previewEl) {
-  if (!previewEl) return;
   previewEl.innerHTML = "";
 }
 
@@ -227,7 +215,7 @@ async function upsertProfile({ display_name, handle, avatar_emoji }) {
   }
 
   const row = {
-    id: user.id,                // RLS: auth.uid() = id
+    id: user.id, // ← auth.uid() と同じになる
     display_name,
     handle,
     avatar_emoji,
@@ -236,7 +224,9 @@ async function upsertProfile({ display_name, handle, avatar_emoji }) {
 
   const { data, error } = await supabase
     .from("profiles")
-    .upsert(row, { onConflict: "id" });
+    .upsert(row, { onConflict: "id" })
+    .select("*")
+    .maybeSingle();
 
   if (error) {
     console.error("upsertProfile error:", error);
@@ -247,7 +237,7 @@ async function upsertProfile({ display_name, handle, avatar_emoji }) {
 }
 
 // ==============================
-// ユーザー & プロフィール情報取得
+// ユーザー & プロフィール取得
 // ==============================
 async function refreshCurrentUser() {
   const {
@@ -283,15 +273,15 @@ async function refreshCurrentUser() {
 }
 
 // ==============================
-// ユーザーUI更新
+// ユーザーUI
 // ==============================
 function updateUserUI() {
   if (!currentUser || !currentProfile) {
-    if (currentUserAvatarEl) currentUserAvatarEl.textContent = "🧑‍💻";
-    if (currentUserNameEl) currentUserNameEl.textContent = "未ログイン";
-    if (currentUserHandleEl) currentUserHandleEl.textContent = "";
-    if (profileNameEl) profileNameEl.textContent = "StepLinkユーザー";
-    if (profileHandleEl) profileHandleEl.textContent = "@user";
+    currentUserAvatarEl.textContent = "🧑‍💻";
+    currentUserNameEl.textContent = "未ログイン";
+    currentUserHandleEl.textContent = "";
+    profileNameEl.textContent = "StepLinkユーザー";
+    profileHandleEl.textContent = "@user";
     return;
   }
 
@@ -299,15 +289,16 @@ function updateUserUI() {
   const name = currentProfile.display_name || "名前なし";
   const handle = currentProfile.handle || "user";
 
-  if (currentUserAvatarEl) currentUserAvatarEl.textContent = avatar;
-  if (currentUserNameEl) currentUserNameEl.textContent = name;
-  if (currentUserHandleEl) currentUserHandleEl.textContent = handle ? `@${handle}` : "";
-  if (profileNameEl) profileNameEl.textContent = name;
-  if (profileHandleEl) profileHandleEl.textContent = handle ? `@${handle}` : "@user";
+  currentUserAvatarEl.textContent = avatar;
+  currentUserNameEl.textContent = name;
+  currentUserHandleEl.textContent = handle ? `@${handle}` : "";
+
+  profileNameEl.textContent = name;
+  profileHandleEl.textContent = handle ? `@${handle}` : "@user";
 }
 
 // ==============================
-// ツイート系
+// ツイート読み込み
 // ==============================
 async function loadTweets() {
   const { data, error } = await supabase
@@ -338,14 +329,14 @@ async function loadTweets() {
 }
 
 function renderTweets() {
-  if (tweetsContainer) tweetsContainer.innerHTML = "";
-  if (profileTweetsContainer) profileTweetsContainer.innerHTML = "";
+  tweetsContainer.innerHTML = "";
+  profileTweetsContainer.innerHTML = "";
 
   tweetsCache.forEach((tweet) => {
     const card = createTweetCard(tweet);
-    if (tweetsContainer) tweetsContainer.appendChild(card);
+    tweetsContainer.appendChild(card);
 
-    if (currentUser && tweet.user_id === currentUser.id && profileTweetsContainer) {
+    if (currentUser && tweet.user_id === currentUser.id) {
       const ownCard = createTweetCard(tweet);
       profileTweetsContainer.appendChild(ownCard);
     }
@@ -397,14 +388,15 @@ function createTweetCard(tweet) {
   return card;
 }
 
+// ==============================
+// ツイート投稿
+// ==============================
 async function submitTweet(source) {
   const isModal = source === "modal";
 
   const textarea = isModal ? tweetInputModal : tweetInput;
   const previewEl = isModal ? imagePreviewModal : imagePreview;
   const fileInput = isModal ? imageInputModal : imageInput;
-
-  if (!textarea) return;
 
   const text = textarea.value.trim();
   if (!text) return;
@@ -424,11 +416,9 @@ async function submitTweet(source) {
   }
 
   let imageDataUrl = null;
-  if (previewEl) {
-    const imgTag = previewEl.querySelector("img");
-    if (imgTag) {
-      imageDataUrl = imgTag.src; // 簡易実装
-    }
+  const imgTag = previewEl.querySelector("img");
+  if (imgTag) {
+    imageDataUrl = imgTag.src;
   }
 
   const { error } = await supabase.from("tweets").insert({
@@ -445,8 +435,8 @@ async function submitTweet(source) {
 
   textarea.value = "";
   updateCharCounter(textarea, isModal ? charCounterModal : charCounter);
-  if (previewEl) clearImagePreview(previewEl);
-  if (fileInput) fileInput.value = "";
+  clearImagePreview(previewEl);
+  fileInput.value = "";
 
   if (isModal) {
     closeTweetModal();
@@ -456,13 +446,11 @@ async function submitTweet(source) {
 }
 
 // ==============================
-// イベントセットアップ
+// イベント
 // ==============================
 function setupEvents() {
   // テーマ
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", toggleTheme);
-  }
+  themeToggleBtn.addEventListener("click", toggleTheme);
 
   // ナビ
   navItems.forEach((item) => {
@@ -474,24 +462,18 @@ function setupEvents() {
   });
 
   // 投稿モーダル
-  if (openModalBtn) openModalBtn.addEventListener("click", openTweetModal);
-  if (closeModalBtn) closeModalBtn.addEventListener("click", closeTweetModal);
-  if (tweetModal) {
-    const backdrop = tweetModal.querySelector(".modal-backdrop");
-    if (backdrop) {
-      backdrop.addEventListener("click", closeTweetModal);
-    }
-  }
+  openModalBtn.addEventListener("click", openTweetModal);
+  closeModalBtn.addEventListener("click", closeTweetModal);
+  tweetModal
+    .querySelector(".modal-backdrop")
+    .addEventListener("click", closeTweetModal);
 
   // アカウントモーダル
-  if (switchAccountBtn) switchAccountBtn.addEventListener("click", openAccountModal);
-  if (closeAccountModalBtn) closeAccountModalBtn.addEventListener("click", closeAccountModal);
-  if (accountModal) {
-    const backdrop = accountModal.querySelector(".modal-backdrop");
-    if (backdrop) {
-      backdrop.addEventListener("click", closeAccountModal);
-    }
-  }
+  switchAccountBtn.addEventListener("click", openAccountModal);
+  closeAccountModalBtn.addEventListener("click", closeAccountModal);
+  accountModal
+    .querySelector(".modal-backdrop")
+    .addEventListener("click", closeAccountModal);
 
   // アカウントタブ切り替え
   accountTabs.forEach((tab) => {
@@ -501,116 +483,102 @@ function setupEvents() {
 
       const mode = tab.dataset.mode;
       if (mode === "login") {
-        if (accountLoginView) accountLoginView.classList.remove("hidden");
-        if (accountRegisterView) accountRegisterView.classList.add("hidden");
+        accountLoginView.classList.remove("hidden");
+        accountRegisterView.classList.add("hidden");
       } else {
-        if (accountLoginView) accountLoginView.classList.add("hidden");
-        if (accountRegisterView) accountRegisterView.classList.remove("hidden");
+        accountLoginView.classList.add("hidden");
+        accountRegisterView.classList.remove("hidden");
       }
     });
   });
 
   // 文字数カウント
-  if (tweetInput) {
-    tweetInput.addEventListener("input", () =>
-      updateCharCounter(tweetInput, charCounter)
-    );
-  }
-  if (tweetInputModal) {
-    tweetInputModal.addEventListener("input", () =>
-      updateCharCounter(tweetInputModal, charCounterModal)
-    );
-  }
+  tweetInput.addEventListener("input", () =>
+    updateCharCounter(tweetInput, charCounter)
+  );
+  tweetInputModal.addEventListener("input", () =>
+    updateCharCounter(tweetInputModal, charCounterModal)
+  );
 
   // 画像選択
   setUpImageSelector(imageSelectBtn, imageInput, imagePreview);
   setUpImageSelector(imageSelectBtnModal, imageInputModal, imagePreviewModal);
 
   // 投稿ボタン
-  if (postTweetBtn) {
-    postTweetBtn.addEventListener("click", () => submitTweet("home"));
-  }
-  if (postTweetBtnModal) {
-    postTweetBtnModal.addEventListener("click", () => submitTweet("modal"));
-  }
+  postTweetBtn.addEventListener("click", () => submitTweet("home"));
+  postTweetBtnModal.addEventListener("click", () => submitTweet("modal"));
 
   // ログイン
-  if (loginSubmitBtn) {
-    loginSubmitBtn.addEventListener("click", async () => {
-      if (!loginHandleInput || !loginPasswordInput) return;
+  loginSubmitBtn.addEventListener("click", async () => {
+    loginError.textContent = "";
 
-      loginError.textContent = "";
+    const email = loginHandleInput.value.trim();
+    const password = loginPasswordInput.value;
 
-      const email = loginHandleInput.value.trim();
-      const password = loginPasswordInput.value;
+    if (!email || !password) {
+      loginError.textContent = "未入力の項目があるよ…";
+      return;
+    }
 
-      if (!email || !password) {
-        loginError.textContent = "未入力の項目があるよ…";
-        return;
-      }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+    if (error) {
+      console.error("login error:", error);
+      loginError.textContent = "ログインに失敗しちゃった…";
+      return;
+    }
+
+    await refreshCurrentUser();
+    await loadTweets();
+    closeAccountModal();
+  });
+
+  // 新規登録
+  registerSubmitBtn.addEventListener("click", async () => {
+    registerError.textContent = "";
+
+    const name = regNameInput.value.trim();
+    const handle = regHandleInput.value.trim();
+    const email = regEmailInput.value.trim();
+    const avatar = (regAvatarInput.value || "🧑‍💻").trim();
+    const password = regPasswordInput.value;
+
+    if (!name || !handle || !email || !password) {
+      registerError.textContent = "未入力の項目があるよ…";
+      return;
+    }
+
+    // 1️⃣ サインアップ
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (signUpError) {
+      console.error("signUp error:", signUpError);
+      registerError.textContent = "サインアップに失敗しちゃった…";
+      return;
+    }
+
+    try {
+      // 2️⃣ プロフィール upsert
+      await upsertProfile({
+        display_name: name,
+        handle,
+        avatar_emoji: avatar,
       });
-
-      if (error) {
-        console.error("login error:", error);
-        loginError.textContent = "ログインに失敗しちゃった…";
-        return;
-      }
 
       await refreshCurrentUser();
       await loadTweets();
       closeAccountModal();
-    });
-  }
-
-  // 新規登録
-  if (registerSubmitBtn) {
-    registerSubmitBtn.addEventListener("click", async () => {
-      if (!regNameInput || !regHandleInput || !regEmailInput || !regPasswordInput) return;
-
-      registerError.textContent = "";
-
-      const name = regNameInput.value.trim();
-      const handle = regHandleInput.value.trim();
-      const email = regEmailInput.value.trim();
-      const avatar = (regAvatarInput.value || "🧑‍💻").trim();
-      const password = regPasswordInput.value;
-
-      if (!name || !handle || !email || !password) {
-        registerError.textContent = "未入力の項目があるよ…";
-        return;
-      }
-
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (signUpError) {
-        console.error("signUp error:", signUpError);
-        registerError.textContent = "サインアップに失敗しちゃった…";
-        return;
-      }
-
-      try {
-        await upsertProfile({
-          display_name: name,
-          handle,
-          avatar_emoji: avatar,
-        });
-
-        await refreshCurrentUser();
-        await loadTweets();
-        closeAccountModal();
-      } catch (e) {
-        console.error("register upsertProfile error:", e);
-        registerError.textContent = "プロフィール保存でエラー出た…";
-      }
-    });
-  }
+    } catch (e) {
+      console.error("register upsertProfile error:", e);
+      registerError.textContent = "プロフィール保存でエラー出た…";
+    }
+  });
 }
 
 // ==============================
