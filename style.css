@@ -448,7 +448,7 @@ textarea {
   /* 全体：PCでは横に広いコンテナを中央寄せ */
   .app {
     display: block;   /* サイドバーは position:fixed なのでここは block でOK */
-    max-width: 1920px;
+    max-width: 1600px;
     margin: 0 auto;
     min-height: 100vh;
   }
@@ -469,9 +469,9 @@ textarea {
 
   /* タイムラインは「画面中央」に置く（サイドバーの幅は無視して中央寄せ） */
   main.timeline {
-    max-width: 1920px;
+    max-width: 1600px;
     margin: 0 auto;              /* 画面の真ん中にドン */
-    padding: 32px 24px 32px;     /* 上下左右の余白 */
+    padding: 32px 24px 40px;     /* 上下左右の余白 */
   }
 
   /* PCでは下のナビバーは非表示 */
