@@ -1,23 +1,12 @@
 /* ===========================
    ベース
 =========================== */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  background: #f4f4f4;
-  color: #222;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-.app {
-  display: flex;
-  min-height: 100vh;
-  justify-content: center; /* 🌟中央寄せの決定打 */
-}
-
-/* ===========================
-   色定義（緑テーマ）
-=========================== */
 :root {
   --green-main: #81B33B;     /* 通常 */
   --green-hover: #638B2C;    /* ホバー */
@@ -28,21 +17,30 @@ body {
   --text-sub: #777;
 }
 
-/* ===========================
-   左サイドバー
-=========================== */
-.sidebar-left {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 220px;
-  padding: 20px;
-  background: #f5f5f5;
-  border-right: 1px solid #ddd;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: #f4f4f4;
+  color: var(--text-main);
 }
 
+/* モバイル基準：縦並びレイアウト */
+.app {
+  display: block;
+  min-height: 100vh;
+}
 
+/* ===========================
+   左サイドバー（PCでだけ表示）
+=========================== */
+.sidebar-left {
+  display: none; /* モバイルでは非表示 */
+}
+
+/* ===========================
+   サイドバー内パーツ
+=========================== */
 .logo {
   font-size: 22px;
   font-weight: bold;
@@ -118,61 +116,32 @@ body {
   cursor: pointer;
 }
 
-/* ログアウト */
+/* ログアウトボタン */
 .logout-button {
   width: 100%;
   margin-top: 10px;
   padding: 8px 12px;
-  background: #81B33B;
+  background: var(--green-main);
   border: none;
   color: white;
   border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
 }
-
 .logout-button:hover {
-  background: #638B2C;
+  background: var(--green-hover);
 }
-
 .logout-button:active {
-  background: #4e6f22; /* 押したときの濃い緑 */
+  background: #4e6f22;
 }
 
-/* 追加（全体のボックス計算安定させる） */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/* タイムライン */
-.timeline {
-  width: 600px;
-  max-width: 100%;
-  margin-left: 240px; /* サイドバー幅分ずらす */
-  padding: 20px;
-}
-
-
-/* 投稿カードの幅がヘッダーと揃いやすくなるように */
-.new-post-card {
-  background: var(--bg-white);
-  margin: 20px 0;                /* ← 左右の margin を 0 に */
-  padding: 15px 20px;
-  border-radius: 12px;
-  display: flex;
-  gap: 10px;
-  border: 1px solid var(--line);
-}
 /* ===========================
-   タイムライン
+   タイムライン（共通）
 =========================== */
-.timeline {
-  margin-left: 240px;
-  flex: 1;
-  padding: 20px 0;
-  max-width: 700px;
+main.timeline {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 16px 96px;  /* 下ナビ分の余白をあらかじめ確保 */
 }
 
 .timeline-header {
@@ -181,17 +150,13 @@ body {
   background: var(--bg-white);
 }
 
-main.timeline {
-  margin-left: 260px; /* サイドバー分のスペース */
-}
-
 /* ===========================
    投稿カード
 =========================== */
 .new-post-card {
   background: var(--bg-white);
-  margin: 20px;
-  padding: 15px;
+  margin: 20px 0;
+  padding: 15px 20px;
   border-radius: 12px;
   display: flex;
   gap: 10px;
@@ -211,7 +176,8 @@ textarea {
   background: transparent;
 }
 
-#postTweetBtn {
+#postTweetBtn,
+#postTweetBtnModal {
   padding: 8px 14px;
   background: var(--green-main);
   border: none;
@@ -220,10 +186,12 @@ textarea {
   cursor: pointer;
   transition: 0.15s;
 }
-#postTweetBtn:hover {
+#postTweetBtn:hover,
+#postTweetBtnModal:hover {
   background: var(--green-hover);
 }
-#postTweetBtn:active {
+#postTweetBtn:active,
+#postTweetBtnModal:active {
   background: var(--green-press);
 }
 
@@ -313,25 +281,6 @@ textarea {
 
 .modal-body {
   padding: 20px;
-}
-
-/* ===========================
-   投稿モーダルの投稿ボタン
-=========================== */
-#postTweetBtnModal {
-  padding: 8px 14px;
-  background: var(--green-main);
-  border: none;
-  color: white;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-#postTweetBtnModal:hover {
-  background: var(--green-hover);
-}
-#postTweetBtnModal:active {
-  background: var(--green-press);
 }
 
 /* ===========================
@@ -440,7 +389,10 @@ textarea {
   border-radius: 8px;
   margin-top: 10px;
 }
-/* ===== ボトムナビ（デフォルトは非表示） ===== */
+
+/* ===========================
+   ボトムナビ（モバイル）
+=========================== */
 .bottom-nav {
   position: fixed;
   left: 0;
@@ -449,16 +401,14 @@ textarea {
   height: 56px;
   background: #ffffff;
   border-top: 1px solid #e0e0e0;
-  display: none;
+  display: flex;  /* モバイルで表示 */
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
 
-  /* ▼ iPhone のホームバー対策 */
   padding-bottom: env(safe-area-inset-bottom, 0);
   box-sizing: content-box;
 }
-
 
 .bottom-nav-item {
   flex: 1;
@@ -481,7 +431,7 @@ textarea {
 }
 
 .bottom-nav-item.active {
-  color: #81B33B;
+  color: var(--green-main);
   font-weight: 600;
 }
 
@@ -489,26 +439,36 @@ textarea {
   background: #f3f8ea;
 }
 
-/* ===== スマホ用レイアウト調整 ===== */
-@media (max-width: 768px) {
-  .sidebar-left {
-    display: none;           /* スマホでは左サイドバーを隠す */
+/* ===========================
+   PCレイアウト（768px以上）
+=========================== */
+@media (min-width: 768px) {
+  .app {
+    display: flex;
+    justify-content: center;
   }
 
-  .timeline {
-    margin-left: 0;
-    width: 100%;
-    max-width: 600px;
+  .sidebar-left {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 220px;
+    padding: 20px;
+    background: #f5f5f5;
+    border-right: 1px solid #ddd;
+  }
+
+  main.timeline {
+    max-width: 700px;
     margin: 0 auto;
-    padding: 16px;
-    padding-bottom: 96px;    /* 下メニューぶんの余白 */
+    margin-left: 260px; /* サイドバー分 + 少し余白 */
+    padding: 24px 24px 40px;
   }
 
   .bottom-nav {
-    display: flex;           /* スマホで表示 */
-  }
-
-  body {
-    background: #f5f5f5;
+    display: none; /* PCでは下ナビ非表示 */
   }
 }
