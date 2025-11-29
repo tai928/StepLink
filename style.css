@@ -500,22 +500,6 @@ textarea {
    /* ===========================
    PC で投稿カラムをもっと横長にする
 =========================== */
-@media (min-width: 1024px) {
-  /* タイムライン本体の横幅を広げる */
-  main.timeline {
-    max-width: 900px;      /* 好きなら 800〜1000 あたりで調整してOK */
-    margin-left: 260px;    /* サイドバー分 + 少し余白 */
-    margin-right: auto;
-    padding: 32px 32px 60px;
-  }
-
-  /* ヘッダー・投稿カード・投稿1件はタイムラインいっぱい使う */
-  .timeline-header,
-  .new-post-card,
-  .post {
-    max-width: 100%;
-  }
-}
 
 }
 
