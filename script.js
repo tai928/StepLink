@@ -441,28 +441,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // =====================================
-  // 📝 モーダルからの投稿
+  // 📝 モーダルからの投稿（これだけ残せばOK）
   // =====================================
   const tweetModal = document.getElementById("tweetModal");
   const openModalBtn = document.getElementById("openModalBtn");
   const closeModalBtn = document.getElementById("closeModalBtn");
   const tweetModalBackdrop = tweetModal?.querySelector(".modal-backdrop");
-
+  
   const tweetInputModal = document.getElementById("tweetInputModal");
   const charCounterModal = document.getElementById("charCounterModal");
   const imageSelectBtnModal = document.getElementById("imageSelectBtnModal");
   const imageInputModal = document.getElementById("imageInputModal");
   const imagePreviewModal = document.getElementById("imagePreviewModal");
   const postTweetBtnModal = document.getElementById("postTweetBtnModal");
-
+  
   function openTweetModal() {
-    if (tweetModal) tweetModal.classList.remove("hidden");
+    tweetModal.classList.remove("hidden");
   }
   function closeTweetModal() {
-    if (tweetModal) tweetModal.classList.add("hidden");
+    tweetModal.classList.add("hidden");
   }
-
-  if (openModalBtn && tweetModal) {
+  
+  if (openModalBtn) {
     openModalBtn.addEventListener("click", openTweetModal);
   }
   if (closeModalBtn) {
@@ -471,14 +471,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (tweetModalBackdrop) {
     tweetModalBackdrop.addEventListener("click", closeTweetModal);
   }
-
+  
   if (tweetInputModal && charCounterModal) {
     updateCounter(tweetInputModal, charCounterModal);
     tweetInputModal.addEventListener("input", () =>
       updateCounter(tweetInputModal, charCounterModal)
     );
   }
-
+  
   if (imageSelectBtnModal && imageInputModal && imagePreviewModal) {
     imageSelectBtnModal.addEventListener("click", () =>
       imageInputModal.click()
@@ -496,7 +496,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       reader.readAsDataURL(file);
     });
   }
-
+  
   if (postTweetBtnModal && tweetInputModal) {
     postTweetBtnModal.addEventListener("click", () =>
       handlePostFrom(tweetInputModal, charCounterModal, imagePreviewModal)
