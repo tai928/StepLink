@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
+  
 <body>
   <div class="app">
     <!-- サイドバー（profile.html と完全に同じにしてね） -->
@@ -132,8 +133,32 @@
     </div>
   </div>
 
-  <!-- Supabase → script.js の順番で読み込み -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
+    <!-- Supabase → script.js の順番で読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+  
+    <!-- スマホ用ボトムナビ -->
+    <nav class="bottom-nav">
+      <a href="index.html" class="bottom-nav-item active">
+        <span class="icon">🏠</span>
+        <span class="label">ホーム</span>
+      </a>
+      <a href="messages.html" class="bottom-nav-item">
+        <span class="icon">💬</span>
+        <span class="label">メッセージ</span>
+      </a>
+      <a href="profile.html" class="bottom-nav-item">
+        <span class="icon">👤</span>
+        <span class="label">プロフィール</span>
+      </a>
+      <button type="button" class="bottom-nav-item" id="bottomAccountBtn">
+        <span class="icon">⚙️</span>
+        <span class="label">アカウント</span>
+      </button>
+    </nav>
+  
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
 </body>
 </html>
+
