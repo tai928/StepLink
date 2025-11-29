@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>StepLink</title>
+  <title>StepLink - ホーム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body data-theme="dark">
+<body>
   <div class="app">
-    <!-- 左サイドバー（共通） -->
+    <!-- サイドバー（profile.html と完全に同じにしてね） -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
 
@@ -18,6 +18,8 @@
         <a href="profile.html" class="nav-item">プロフィール</a>
       </nav>
 
+      <!-- テーマボタンは見た目だけの飾りでもOK -->
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
 
       <button class="post-button" id="openModalBtn">投稿する</button>
 
@@ -33,10 +35,13 @@
       </div>
     </aside>
 
-    <!-- ホーム -->
+    <!-- タイムライン -->
     <main class="timeline">
-      <header class="timeline-header"><h1>ホーム</h1></header>
+      <header class="timeline-header">
+        <h1>ホーム</h1>
+      </header>
 
+      <!-- 新規投稿カード -->
       <section class="new-post-card">
         <div class="avatar">🧑‍💻</div>
         <div class="new-post-body">
@@ -56,11 +61,12 @@
         </div>
       </section>
 
+      <!-- 投稿が並ぶところ -->
       <section id="tweetsContainer" class="posts"></section>
     </main>
   </div>
 
-  <!-- 投稿モーダル（共通） -->
+  <!-- 投稿モーダル -->
   <div id="tweetModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -89,7 +95,7 @@
     </div>
   </div>
 
-  <!-- アカウントモーダル（共通） -->
+  <!-- アカウントモーダル（profile.html と同じ） -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -125,9 +131,8 @@
     </div>
   </div>
 
-  <!-- ① Supabase CDN -->
+  <!-- Supabase → script.js の順番で読み込み -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- ② アプリのJS -->
   <script src="script.js"></script>
 </body>
 </html>
