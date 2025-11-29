@@ -453,73 +453,42 @@ textarea {
 }
 
 /* ===========================
-   PCレイアウト（768px〜）
+   PCレイアウト（768px以上）
 =========================== */
 @media (min-width: 768px) {
-  /* PCレイアウト全体 */
+  /* 画面全体の横幅をコントロール（中央に寄せる） */
   .app {
     display: flex;
-    justify-content: flex-start;
-    margin-left: 0;
+    max-width: 1100px;   /* サイドバー + タイムライン分くらい */
+    margin: 0 auto;      /* 画面中央に配置 */
+    min-height: 100vh;
   }
 
-  /* 左サイドバー */
+  /* サイドバーを左に固定カラムとして表示 */
   .sidebar-left {
-    position: fixed;
-    left: 0;
+    display: flex;
+    flex-direction: column;
+    position: sticky;    /* ページ上部で固定（fixedより扱いやすい） */
     top: 0;
-    bottom: 0;
-    width: 220px;
+    align-self: flex-start;
+    width: 240px;
     padding: 20px;
     background: #f5f5f5;
     border-right: 1px solid #ddd;
+    height: 100vh;
   }
 
-  /* タイムライン：横幅広め＋中央寄せ */
+  /* タイムラインは「残りの幅」で中央寄せ */
   main.timeline {
-    margin-left: 260px;     /* サイドバー分 */
-    margin-right: auto;
-    padding: 32px 32px 60px;
-    max-width: 900px;       /* ★ 横幅をガッツリ広く（600→900など自由） */
+    flex: 1;
+    max-width: 700px;      /* カラム幅 */
+    margin: 0 auto;        /* カラム自体を中央寄せ */
+    padding: 24px 24px 40px;
   }
 
-  /* 投稿カードも横に広げる */
-  .new-post-card {
-    margin: 20px 0;
-    max-width: 900px;       /* 投稿も横幅マッチ */
-  }
-
-  /* 投稿1件 */
-  .post {
-    max-width: 900px;
-  }
-
+  /* PCでは下ナビを消す */
   .bottom-nav {
     display: none;
   }
-   /* ===========================
-   PC では左サイドバーを必ず表示
-=========================== */
-@media (min-width: 769px) {
-  .sidebar-left {
-    display: block !important;
-    width: 220px !important;
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-  }
-
-  .timeline {
-    margin-left: 260px !important; /* サイドバー分あける */
-    max-width: 900px;
-    padding: 20px 32px;
-  }
-}
-
-   /* ===========================
-   PC で投稿カラムをもっと横長にする
-=========================== */
-
 }
 
