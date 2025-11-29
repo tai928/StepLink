@@ -8,12 +8,12 @@
 
 /* テーマ変数 */
 :root {
-  --bg-main: #000;
-  --bg-card: #16181c;
-  --bg-input: #202327;
+  --bg-main: #f7f5ec;
+  --bg-card: #dad7c9;
+  --bg-input: #fcfcf9;
   --border-subtle: rgba(239, 243, 244, 0.15);
-  --accent: #1d9bf0;
-  --accent-hover: #1a8cd8;
+  --accent: #81b33b;
+  --accent-hover: #638b2c;
   --text-main: #e7e9ea;
   --text-muted: #71767b;
 }
@@ -24,8 +24,8 @@ body[data-theme="light"] {
   --bg-card: #f7f9f9;
   --bg-input: #eff3f4;
   --border-subtle: rgba(15, 20, 25, 0.15);
-  --accent: #1d9bf0;
-  --accent-hover: #1a8cd8;
+  --accent: #81b33b;
+  --accent-hover: #638b2c;
   --text-main: #0f1419;
   --text-muted: #536471;
 }
