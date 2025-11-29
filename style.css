@@ -115,7 +115,31 @@ body {
   border-radius: 10px;
   cursor: pointer;
 }
+/* 追加（全体のボックス計算安定させる） */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
+/* タイムライン */
+.timeline {
+  margin-left: 240px;            /* サイドバー分ずらす */
+  padding: 20px 32px;            /* 左右の余白 */
+  width: calc(100% - 240px);     /* 残り全部使う */
+  max-width: 1000px;             /* でかい画面でも最大幅だけ制限 */
+}
+
+/* 投稿カードの幅がヘッダーと揃いやすくなるように */
+.new-post-card {
+  background: var(--bg-white);
+  margin: 20px 0;                /* ← 左右の margin を 0 に */
+  padding: 15px 20px;
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  border: 1px solid var(--line);
+}
 /* ===========================
    タイムライン
 =========================== */
