@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>StepLink - プロフィール</title>
+  <title>StepLink</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <!-- Supabase SDK -->
@@ -10,7 +10,9 @@
 </head>
 <body>
   <div class="app">
-    <!-- 左サイドバー -->
+    <!-- ===========================
+         左サイドバー（PC）
+    ============================ -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
 
@@ -35,36 +37,49 @@
       </div>
     </aside>
 
-    <!-- メイン（プロフィール） -->
+    <!-- ===========================
+         メイン（Twitter風プロフィール）
+    ============================ -->
     <main class="timeline">
+      <!-- 上部ヘッダー -->
       <header class="timeline-header">
         <h1>プロフィール</h1>
-        <button id="editProfileBtn" class="primary small-primary">
-          プロフィールを編集
-        </button>
       </header>
 
-      <!-- プロフィール表示 -->
-      <section class="profile-header">
-        <div class="profile-banner"></div>
+      <!-- バナー（Twitterの上の画像） -->
+      <div class="profile-banner"></div>
 
-        <div class="profile-main">
+      <!-- アイコン＋編集ボタン行 -->
+      <div class="profile-top">
+        <div class="profile-avatar-wrapper">
           <div class="profile-avatar" id="profileAvatar">🧑‍💻</div>
         </div>
 
-        <div class="profile-info">
-          <div class="profile-name" id="profileName">StepLinkユーザー</div>
-          <div class="profile-handle" id="profileHandle">@user</div>
-          <div class="profile-bio">プロフィールはまだ書かれていません</div>
-        </div>
-      </section>
+        <button id="editProfileBtn" class="edit-profile-btn">
+          プロフィールを編集
+        </button>
+      </div>
+
+      <!-- プロフィール情報 -->
+      <div class="profile-info">
+        <div class="profile-name" id="profileName">StepLinkユーザー</div>
+        <div class="profile-handle" id="profileHandle">@user</div>
+        <div class="profile-bio" id="profileBio">プロフィールはまだ書かれていません</div>
+      </div>
+
+      <!-- タブ（今はツイートだけ） -->
+      <div class="profile-tabs">
+        <div class="profile-tab active">ツイート</div>
+      </div>
 
       <!-- 自分の投稿一覧 -->
       <section id="profileTweetsContainer" class="posts"></section>
     </main>
   </div>
 
-  <!-- 投稿モーダル（どのページでも使えるように共通） -->
+  <!-- ===========================
+       投稿モーダル（共通）
+  ============================ -->
   <div id="tweetModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -84,7 +99,7 @@
               <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
               <span class="char-counter" id="charCounterModal">0 / 140</span>
             </div>
-            <button id="postTweetBtnModal">投稿</button>
+            <button id="postTweetBtnModal" class="primary">投稿</button>
           </div>
 
           <input type="file" id="imageInputModal" accept="image/*" hidden />
@@ -93,7 +108,9 @@
     </div>
   </div>
 
-  <!-- アカウントモーダル（ログイン/新規登録） -->
+  <!-- ===========================
+       アカウントモーダル
+  ============================ -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -129,7 +146,9 @@
     </div>
   </div>
 
-  <!-- プロフィール編集モーダル -->
+  <!-- ===========================
+       プロフィール編集モーダル
+  ============================ -->
   <div id="editProfileModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -162,7 +181,9 @@
     </div>
   </div>
 
-  <!-- ボトムナビ（スマホ） -->
+  <!-- ===========================
+       ボトムナビ（スマホ）
+  ============================ -->
   <nav class="bottom-nav">
     <a href="index.html" class="bottom-nav-item">
       <span class="icon">🏠</span>
@@ -178,6 +199,7 @@
     </a>
   </nav>
 
+  <!-- 共通スクリプト -->
   <script src="script.js"></script>
 </body>
 </html>
