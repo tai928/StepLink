@@ -434,6 +434,138 @@ textarea {
   margin-bottom: 6px;
 }
 
+/* ===============================
+   Twitter風プロフィールレイアウト
+================================*/
+
+/* 上のバナー部分 */
+.profile-banner {
+  width: 100%;
+  height: 180px;
+  background: #cfe6b5; /* 柔らかい緑系グラデにしたければここいじる */
+}
+
+/* アイコン＋編集ボタン行 */
+.profile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 16px;
+  margin-top: -48px; /* アイコンがバナーに少し重なる */
+}
+
+/* 白い縁つき丸アイコン枠 */
+.profile-avatar-wrapper {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  padding: 4px;
+  background: #ffffff;
+  border: 3px solid #ffffff;
+}
+
+/* 中の絵文字アイコン */
+.profile-avatar {
+  background: #ffffff;
+  width: 100%;
+  height: 100%;
+  font-size: 48px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 「プロフィールを編集」ボタン（Twitter風位置＆見た目） */
+.edit-profile-btn {
+  padding: 8px 14px;
+  background: var(--green-main);
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.15s;
+}
+
+.edit-profile-btn:hover {
+  background: var(--green-hover);
+}
+
+.edit-profile-btn:active {
+  background: var(--green-press);
+}
+
+/* 情報エリア */
+.profile-info {
+  padding: 0 16px;
+  margin-top: 12px;
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.profile-handle {
+  color: #777;
+  margin-bottom: 6px;
+}
+
+.profile-bio {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+/* ↓ もし JS が class で取得している場合の保険 */
+.profile-bio#profileBio {
+  /* 何も追加しないが、id と class 両方で拾えるようにしておく */
+}
+
+/* タブ（ツイート／返信…のとこ。今はツイートだけ） */
+.profile-tabs {
+  margin-top: 16px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+}
+
+.profile-tab {
+  flex: 1;
+  text-align: center;
+  padding: 14px 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  position: relative;
+}
+
+.profile-tab.active {
+  color: var(--green-main);
+  font-weight: bold;
+}
+
+.profile-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: var(--green-main);
+}
+
+/* スマホ時も崩れないよう軽く調整 */
+@media (max-width: 768px) {
+  .profile-top {
+    padding: 0 12px;
+  }
+  .profile-info {
+    padding: 0 12px;
+  }
+}
+
 /* ===========================
    画像プレビュー
 =========================== */
