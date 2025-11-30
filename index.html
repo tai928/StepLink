@@ -5,23 +5,25 @@
   <title>StepLink</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-  
-<body>
+<body data-theme="light">
   <div class="app">
-    <!-- サイドバー（profile.html と完全に同じにしてね） -->
+    <!-- ===========================
+         左サイドバー（PC）
+    ============================ -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
 
       <nav class="nav">
         <a href="index.html" class="nav-item active">ホーム</a>
-        <a href="messages.html" class="nav-item">メッセージ</a>
+        <a href="message.html" class="nav-item">メッセージ</a>
         <a href="profile.html" class="nav-item">プロフィール</a>
       </nav>
 
-      <!-- テーマボタンは見た目だけの飾りでもOK -->
-
-
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
       <button class="post-button" id="openModalBtn">投稿する</button>
 
       <div class="account-summary">
@@ -33,11 +35,13 @@
           </div>
         </div>
         <button class="icon-btn small" id="switchAccountBtn">アカウント</button>
+        <button class="logout-button" id="logoutBtn">ログアウト</button>
       </div>
-      <button class="logout-button" id="logoutBtn">ログアウト</button>
     </aside>
 
-    <!-- タイムライン -->
+    <!-- ===========================
+         メインタイムライン
+    ============================ -->
     <main class="timeline">
       <header class="timeline-header">
         <h1>ホーム</h1>
@@ -45,17 +49,20 @@
 
       <!-- 新規投稿カード -->
       <section class="new-post-card">
-        <div class="profile-avatar" id="profileAvatar">🧑‍💻</div>
+        <div class="avatar">🧑‍💻</div>
         <div class="new-post-body">
-          <textarea id="tweetInput" placeholder="いまどうしてる？"></textarea>
+          <textarea
+            id="tweetInput"
+            placeholder="いまどうしてる？"
+            rows="3"
+          ></textarea>
 
           <div class="image-preview" id="imagePreview"></div>
 
           <div class="new-post-actions">
-            <div class="left-actions">
-              <button class="icon-btn" id="imageSelectBtn">🖼 画像</button>
-              <span class="char-counter" id="charCounter">0 / 140</span>
-            </div>
+            <button class="icon-btn" id="imageSelectBtn">🖼 画像</button>
+            <span class="char-counter" id="charCounter">0 / 140</span>
+
             <button id="postTweetBtn">投稿</button>
           </div>
 
@@ -63,12 +70,53 @@
         </div>
       </section>
 
-      <!-- 投稿が並ぶところ -->
+      <!-- タイムライン投稿一覧 -->
       <section id="tweetsContainer" class="posts"></section>
+
+      <!-- （オプション）自分の投稿プレビュー用プロフィールタイムライン -->
+      <section class="profile-header">
+        <div class="profile-banner"></div>
+
+        <div class="profile-main">
+          <div class="profile-avatar" id="profileAvatar">🧑‍💻</div>
+        </div>
+
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">StepLinkユーザー</div>
+          <div class="profile-handle" id="profileHandle">@user</div>
+          <div class="profile-bio">プロフィール準備中</div>
+        </div>
+      </section>
+
+      <section id="profileTweetsContainer" class="posts"></section>
     </main>
   </div>
 
-  <!-- 投稿モーダル -->
+  <!-- ===========================
+       ボトムナビ（スマホ用）
+  ============================ -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bottom-nav-item active">
+      <span class="icon">🏠</span>
+      <span>ホーム</span>
+    </a>
+    <a href="message.html" class="bottom-nav-item">
+      <span class="icon">💬</span>
+      <span>メッセージ</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <span class="icon">👤</span>
+      <span>プロフィール</span>
+    </a>
+    <button class="bottom-nav-item" id="bottomAccountBtn">
+      <span class="icon">⚙️</span>
+      <span>アカウント</span>
+    </button>
+  </nav>
+
+  <!-- ===========================
+       投稿モーダル
+  ============================ -->
   <div id="tweetModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -76,19 +124,21 @@
         <button id="closeModalBtn" class="icon-btn">✕</button>
       </header>
 
-      <section class="new-post-card modal-body">
-        <div class="profile-avatar" id="profileAvatar">🧑‍💻</div>
+      <section class="modal-body">
         <div class="new-post-body">
-          <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
+          <textarea
+            id="tweetInputModal"
+            placeholder="いまどうしてる？"
+            rows="3"
+          ></textarea>
 
           <div class="image-preview" id="imagePreviewModal"></div>
 
           <div class="new-post-actions">
-            <div class="left-actions">
-              <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
-              <span class="char-counter" id="charCounterModal">0 / 140</span>
-            </div>
-            <button id="postTweetBtnModal">投稿</button>
+            <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+            <span class="char-counter" id="charCounterModal">0 / 140</span>
+
+            <button id="postTweetBtnModal" class="primary">投稿</button>
           </div>
 
           <input type="file" id="imageInputModal" accept="image/*" hidden />
@@ -96,22 +146,10 @@
       </section>
     </div>
   </div>
-  <!-- 返信モーダル -->
-  <div id="replyModal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <header class="modal-header">
-        <button id="closeReplyModal" class="icon-btn">✕</button>
-      </header>
-  
-      <div class="modal-body">
-        <textarea id="replyInput" placeholder="返信を書く…"></textarea>
-        <button id="sendReplyBtn" class="primary">返信する</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- アカウントモーダル（profile.html と同じ） -->
+  <!-- ===========================
+       アカウントモーダル
+  ============================ -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -127,67 +165,73 @@
 
         <!-- ログイン -->
         <div id="accountLoginView">
-          <label>メール<input id="loginHandleInput" type="email"></label>
-          <label>パスワード<input id="loginPasswordInput" type="password"></label>
+          <label>
+            メール
+            <input id="loginHandleInput" type="email" />
+          </label>
+          <label>
+            パスワード
+            <input id="loginPasswordInput" type="password" />
+          </label>
           <button class="primary" id="loginSubmitBtn">ログイン</button>
           <div id="loginError" class="account-error"></div>
         </div>
 
         <!-- 新規登録 -->
         <div id="accountRegisterView" class="hidden">
-          <label>名前<input id="regNameInput" type="text"></label>
-          <label>ハンドル（@なし）<input id="regHandleInput" type="text"></label>
-          <label>メール<input id="regEmailInput" type="email"></label>
-          <label>絵文字<input id="regAvatarInput" type="text" placeholder="🧑‍💻"></label>
-          <label>パスワード<input id="regPasswordInput" type="password"></label>
-          <button class="primary" id="registerSubmitBtn">アカウント作成</button>
+          <label>
+            名前
+            <input id="regNameInput" type="text" />
+          </label>
+          <label>
+            ハンドル（@なし）
+            <input id="regHandleInput" type="text" />
+          </label>
+          <label>
+            メール
+            <input id="regEmailInput" type="email" />
+          </label>
+          <label>
+            絵文字
+            <input id="regAvatarInput" type="text" placeholder="🧑‍💻" />
+          </label>
+          <label>
+            パスワード
+            <input id="regPasswordInput" type="password" />
+          </label>
+          <button class="primary" id="registerSubmitBtn">
+            アカウント作成
+          </button>
           <div id="registerError" class="account-error"></div>
         </div>
       </div>
     </div>
   </div>
 
-    <!-- Supabase → script.js の順番で読み込み -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
-  
-    <!-- スマホ用ボトムナビ -->
-    <nav class="bottom-nav">
-      <a href="index.html" class="bottom-nav-item active">
-        <span class="icon">🏠</span>
-        <span class="label">ホーム</span>
-      </a>
-      <a href="messages.html" class="bottom-nav-item">
-        <span class="icon">💬</span>
-        <span class="label">メッセージ</span>
-      </a>
-      <a href="profile.html" class="bottom-nav-item">
-        <span class="icon">👤</span>
-        <span class="label">プロフィール</span>
-      </a>
-      <button type="button" class="bottom-nav-item" id="bottomAccountBtn">
-        <span class="icon">⚙️</span>
-        <span class="label">アカウント</span>
-      </button>
-    </nav>
-  
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
-    <!-- 返信モーダル -->
+  <!-- ===========================
+       返信モーダル
+  ============================ -->
   <div id="replyModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
       <header class="modal-header">
         <button id="closeReplyModal" class="icon-btn">✕</button>
       </header>
-  
+
       <div class="modal-body">
-        <textarea id="replyInput" placeholder="返信を書く…"></textarea>
+        <textarea
+          id="replyInput"
+          placeholder="返信を書く…"
+          rows="3"
+        ></textarea>
         <button id="sendReplyBtn" class="primary">返信する</button>
       </div>
     </div>
   </div>
 
+  <!-- ===========================
+       メインスクリプト
+  ============================ -->
+  <script src="script.js"></script>
 </body>
 </html>
-
