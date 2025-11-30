@@ -2,7 +2,7 @@
 // Supabase 初期化
 // ==============================
 
-// ★ここは自分の Supabase に合わせてね（今まで使ってたやつそのまま）
+// ★自分の Supabase プロジェクトの値に合わせてね
 const SUPABASE_URL = "https://ngtthuwmqdcxgddlbsyo.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
 
@@ -10,37 +10,41 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
   // ------------------------------
-  // 共通で使うログイン中ユーザー情報
+  // 共通状態
   // ------------------------------
   let currentUser = null;
   let currentProfile = null;
-  let replyTargetId = null; // 返信先ツイートID
+  let replyTargetId = null; // 返信先ツイートの id
 
   // ------------------------------
-  // よく使う要素参照
+  // よく使う DOM を取る
   // ------------------------------
-  const tweetsContainer = document.getElementById("tweetsContainer");          // ホームのタイムライン
-  const profileTweetsContainer = document.getElementById("profileTweetsContainer"); // プロフィール用
+  const tweetsContainer = document.getElementById("tweetsContainer");
+  const profileTweetsContainer = document.getElementById(
+    "profileTweetsContainer"
+  );
   const themeToggleBtn = document.getElementById("themeToggle");
 
   // ==============================
   // 🌙 テーマ切り替え（おまけ）
   // ==============================
-  const savedTheme = localStorage.getItem("steplink-theme");
-  if (savedTheme === "light" || savedTheme === "dark") {
-    document.body.setAttribute("data-theme", savedTheme);
-  }
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", () => {
-      const now = document.body.getAttribute("data-theme") || "light";
-      const next = now === "dark" ? "light" : "dark";
-      document.body.setAttribute("data-theme", next);
-      localStorage.setItem("steplink-theme", next);
-    });
-  }
+  (function setupTheme() {
+    const savedTheme = localStorage.getItem("steplink-theme");
+    if (savedTheme === "light" || savedTheme === "dark") {
+      document.body.setAttribute("data-theme", savedTheme);
+    }
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener("click", () => {
+        const now = document.body.getAttribute("data-theme") || "light";
+        const next = now === "dark" ? "light" : "dark";
+        document.body.setAttribute("data-theme", next);
+        localStorage.setItem("steplink-theme", next);
+      });
+    }
+  })();
 
   // ==============================
-  // 👤 認証状態ロード
+  // 👤 認証状態＆プロフィール読み込み
   // ==============================
   async function loadAuthState() {
     const { data, error } = await supabaseClient.auth.getUser();
@@ -56,7 +60,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     currentUser = data.user;
 
-    // profiles テーブルからプロフィール取得（なければメタデータ）
     const { data: profileData, error: profileError } = await supabaseClient
       .from("profiles")
       .select("name, handle, avatar, bio")
@@ -71,9 +74,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyUserUI(currentUser, currentProfile);
   }
 
-  // ==============================
-  // 👤 UI にユーザー情報反映
-  // ==============================
   function applyUserUI(user, profile) {
     const nameEl = document.getElementById("currentUserName");
     const handleEl = document.getElementById("currentUserHandle");
@@ -82,6 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const profileNameEl = document.getElementById("profileName");
     const profileHandleEl = document.getElementById("profileHandle");
     const profileBioEl = document.querySelector(".profile-bio");
+    const profileAvatarEl = document.getElementById("profileAvatar");
 
     if (!user) {
       if (nameEl) nameEl.textContent = "未ログイン";
@@ -91,10 +92,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (profileNameEl) profileNameEl.textContent = "StepLinkユーザー";
       if (profileHandleEl) profileHandleEl.textContent = "@user";
       if (profileBioEl) profileBioEl.textContent = "プロフィール準備中";
+      if (profileAvatarEl) profileAvatarEl.textContent = "🧑‍💻";
       return;
     }
 
-    const name = profile?.name || user.user_metadata?.name || "StepLinkユーザー";
+    const name =
+      profile?.name || user.user_metadata?.name || "StepLinkユーザー";
     const handle = profile?.handle || user.user_metadata?.handle || "user";
     const avatar = profile?.avatar || user.user_metadata?.avatar || "🧑‍💻";
     const bio = profile?.bio || "プロフィールはまだ書かれていません";
@@ -106,6 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (profileNameEl) profileNameEl.textContent = name;
     if (profileHandleEl) profileHandleEl.textContent = "@" + handle;
     if (profileBioEl) profileBioEl.textContent = bio;
+    if (profileAvatarEl) profileAvatarEl.textContent = avatar;
   }
 
   await loadAuthState();
@@ -124,13 +128,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ==============================
-  // 🐦 tweets の読み込み＆表示（返信対応）
+  // 🐦 tweets 読み込み（返信対応）
   // ==============================
   async function fetchAllTweets() {
     const { data, error } = await supabaseClient
       .from("tweets")
       .select("*")
-      .order("created_at", { ascending: true }); // 古い順 → スレッドが自然
+      .order("created_at", { ascending: true }); // 古い順に取得
 
     if (error) {
       console.error("tweets load error:", error);
@@ -152,6 +156,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <span class="post-handle">@${row.handle}</span>
           <span class="post-time">${formatTime(row.created_at)}</span>
         </div>
+
         <div class="post-text"></div>
 
         <button class="reply-btn" data-tweet-id="${row.id}">返信</button>
@@ -183,15 +188,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     container.appendChild(article);
   }
 
-  // ホームタイムライン
   async function loadHomeTimeline() {
     if (!tweetsContainer) return;
-    const rows = await fetchAllTweets();
 
+    const rows = await fetchAllTweets();
     const parents = rows.filter((t) => !t.parent_id);
     const replies = rows.filter((t) => t.parent_id);
 
-    const repliesMap = new Map(); // parent_id -> [replies]
+    const repliesMap = new Map();
     replies.forEach((rep) => {
       if (!repliesMap.has(rep.parent_id)) repliesMap.set(rep.parent_id, []);
       repliesMap.get(rep.parent_id).push(rep);
@@ -199,18 +203,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     tweetsContainer.innerHTML = "";
     parents
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // 新しい親ツイを上に
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // 親ツイートは新しい順
       .forEach((parent) => {
         const reps = repliesMap.get(parent.id) || [];
         renderTweet(parent, reps, tweetsContainer);
       });
   }
 
-  // プロフィールタイムライン（自分のツイートだけ）
   async function loadProfileTimeline() {
     if (!profileTweetsContainer || !currentUser) return;
-    const rows = await fetchAllTweets();
 
+    const rows = await fetchAllTweets();
     const parents = rows.filter(
       (t) => !t.parent_id && t.user_id === currentUser.id
     );
@@ -236,7 +239,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadProfileTimeline();
   }
 
-  // 初期ロード
   await reloadTimelines();
 
   // ==============================
@@ -297,7 +299,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   );
 
   // ==============================
-  // 🐦 ツイート作成（通常 & 返信共通）
+  // 🐦 ツイート作成（通常＋返信共通）
   // ==============================
   async function createTweet(text, parentId = null) {
     if (!currentUser) {
