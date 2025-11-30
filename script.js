@@ -286,20 +286,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ==============================
-  // プロフィール編集
+  // 🎣 プロフィール編集
   // ==============================
   const editProfileBtn = document.getElementById("editProfileBtn");
   const editProfileModal = document.getElementById("editProfileModal");
-  const closeEditProfileModalBtn = document.getElementById(
-    "closeEditProfileModal"
-  );
+  const closeEditProfileModalBtn = document.getElementById("closeEditProfileModal");
   const editNameInput = document.getElementById("editNameInput");
   const editAvatarInput = document.getElementById("editAvatarInput");
   const editBioInput = document.getElementById("editBioInput");
   const saveProfileBtn = document.getElementById("saveProfileBtn");
   const editProfileError = document.getElementById("editProfileError");
-  const editProfileBackdrop =
-    editProfileModal?.querySelector(".modal-backdrop");
+  const editProfileBackdrop = editProfileModal?.querySelector(".modal-backdrop");
+
+  // デバッグログ（ちゃんと拾えてるか確認用）
+  console.log("editProfileBtn exists?", !!editProfileBtn);
 
   function openEditProfileModal() {
     if (!editProfileModal || !currentUser) return;
@@ -330,6 +330,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (editProfileModal) editProfileModal.classList.add("hidden");
   }
 
+  // ボタンクリックで開く
   if (editProfileBtn) {
     editProfileBtn.addEventListener("click", () => {
       if (!currentUser) {
@@ -339,6 +340,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       openEditProfileModal();
     });
   }
+
+  // ×ボタン・背景クリックで閉じる
   if (closeEditProfileModalBtn) {
     closeEditProfileModalBtn.addEventListener("click", closeEditProfileModal);
   }
@@ -346,6 +349,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     editProfileBackdrop.addEventListener("click", closeEditProfileModal);
   }
 
+  // 保存ボタン
   if (saveProfileBtn) {
     saveProfileBtn.addEventListener("click", async () => {
       if (!currentUser) return;
@@ -355,8 +359,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const bio = editBioInput?.value.trim() || "";
 
       if (!name || !avatar) {
-        if (editProfileError)
+        if (editProfileError) {
           editProfileError.textContent = "名前とアイコンは必須だよ🥺";
+        }
         return;
       }
 
@@ -367,27 +372,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentUser.user_metadata?.handle ||
         "user";
 
-      const { error: pErr } = await supabaseClient.from("profiles").upsert({
-        id: currentUser.id,
-        name,
-        handle,
-        avatar,
-        bio,
-      });
+      // profiles を更新
+      const { error: pErr } = await supabaseClient
+        .from("profiles")
+        .upsert({
+          id: currentUser.id,
+          name,
+          handle,
+          avatar,
+          bio,
+        });
+
       if (pErr) {
         console.error("profile update error:", pErr);
-        if (editProfileError)
+        if (editProfileError) {
           editProfileError.textContent = "プロフィール更新に失敗した…😭";
+        }
         return;
       }
 
+      // auth.user_metadata も更新（任意）
       const { error: authErr } = await supabaseClient.auth.updateUser({
         data: { name, handle, avatar, bio },
       });
+
       if (authErr) {
         console.error("auth update error:", authErr);
       }
 
+      // ローカルキャッシュ更新＋UI反映
       currentProfile = {
         ...(currentProfile || {}),
         name,
@@ -400,6 +413,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       closeEditProfileModal();
     });
   }
+
 
   // ==============================
   // 文字数カウンタ & 画像プレビュー
