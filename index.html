@@ -173,6 +173,21 @@
   
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
+    <!-- 返信モーダル -->
+  <div id="replyModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <button id="closeReplyModal" class="icon-btn">✕</button>
+      </header>
+  
+      <div class="modal-body">
+        <textarea id="replyInput" placeholder="返信を書く…"></textarea>
+        <button id="sendReplyBtn" class="primary">返信する</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
 
