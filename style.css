@@ -294,6 +294,18 @@ textarea {
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
+.post-user-area {
+  cursor: pointer;
+}
+
+.post-user-area:hover .post-name {
+  text-decoration: underline;
+}
+
+.post-avatar.post-user-click {
+  cursor: pointer;
+}
+
 
 /* ===========================
    モーダル共通
