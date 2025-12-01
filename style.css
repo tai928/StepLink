@@ -658,6 +658,22 @@ textarea {
   font-size: 13px;
   margin-left: auto;
 }
+#replyPostBtn {
+  padding: 8px 14px;
+  background: var(--green-main);
+  border: none;
+  color: white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+#replyPostBtn:hover {
+  background: var(--green-hover);
+}
+#replyPostBtn:active {
+  background: var(--green-press);
+}
+
 
 /* ===========================
    スマホ調整（〜767px）
