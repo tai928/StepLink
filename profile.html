@@ -2,15 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>StepLink</title>
+  <title>StepLink - プロフィール</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="app">
-    <!-- ===========================
+
+    <!-- ==========================
          左サイドバー（PC）
     ============================ -->
     <aside class="sidebar-left">
@@ -22,6 +22,7 @@
         <a href="profile.html" class="nav-item active">プロフィール</a>
       </nav>
 
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
       <button class="post-button" id="openModalBtn">投稿する</button>
 
       <div class="account-summary">
@@ -33,21 +34,22 @@
           </div>
         </div>
         <button class="icon-btn small" id="switchAccountBtn">アカウント</button>
-        <button id="logoutBtn" class="logout-button">ログアウト</button>
+        <button class="logout-button" id="logoutBtn">ログアウト</button>
       </div>
     </aside>
 
-    <!-- ===========================
-         メイン（Twitter風プロフィール）
+    <!-- ==========================
+         プロフィール（Twitter風）
     ============================ -->
     <main class="timeline">
-      <!-- 上部ヘッダー -->
       <header class="timeline-header">
         <h1>プロフィール</h1>
       </header>
 
+      <!-- 上のバナー -->
+      <div class="profile-banner"></div>
 
-      <!-- アイコン＋編集ボタン行 -->
+      <!-- アイコン＋右上編集 -->
       <div class="profile-top">
         <div class="profile-avatar-wrapper">
           <div class="profile-avatar" id="profileAvatar">🧑‍💻</div>
@@ -58,25 +60,25 @@
         </button>
       </div>
 
-      <!-- プロフィール情報 -->
+      <!-- 情報 -->
       <div class="profile-info">
-        <div class="profile-name" id="profileName">StepLinkユーザー</div>
+        <div class="profile-name" id="profileName">ユーザー</div>
         <div class="profile-handle" id="profileHandle">@user</div>
-        <div class="profile-bio" id="profileBio">プロフィールはまだ書かれていません</div>
+        <div class="profile-bio" id="profileBio">Bioが未設定です</div>
       </div>
 
-      <!-- タブ（今はツイートだけ） -->
+      <!-- 下のタブ（今はツイートだけ） -->
       <div class="profile-tabs">
-        <div class="profile-tab active">投稿</div>
+        <div class="profile-tab active">ツイート</div>
       </div>
 
-      <!-- 自分の投稿一覧 -->
+      <!-- 投稿一覧 -->
       <section id="profileTweetsContainer" class="posts"></section>
     </main>
   </div>
 
-  <!-- ===========================
-       投稿モーダル（共通）
+  <!-- ==========================
+       投稿モーダル
   ============================ -->
   <div id="tweetModal" class="modal hidden">
     <div class="modal-backdrop"></div>
@@ -85,28 +87,22 @@
         <button id="closeModalBtn" class="icon-btn">✕</button>
       </header>
 
-      <section class="new-post-card modal-body">
-        <div class="avatar" id="composerAvatarModal">🧑‍💻</div>
-        <div class="new-post-body">
-          <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
+      <section class="modal-body">
+        <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
+        <div class="image-preview" id="imagePreviewModal"></div>
 
-          <div class="image-preview" id="imagePreviewModal"></div>
-
-          <div class="new-post-actions">
-            <div class="left-actions">
-              <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
-              <span class="char-counter" id="charCounterModal">0 / 140</span>
-            </div>
-            <button id="postTweetBtnModal" class="primary">投稿</button>
-          </div>
-
-          <input type="file" id="imageInputModal" accept="image/*" hidden />
+        <div class="new-post-actions">
+          <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+          <span class="char-counter" id="charCounterModal">0 / 140</span>
+          <button id="postTweetBtnModal" class="primary">投稿</button>
         </div>
+
+        <input type="file" id="imageInputModal" accept="image/*" hidden />
       </section>
     </div>
   </div>
 
-  <!-- ===========================
+  <!-- ==========================
        アカウントモーダル
   ============================ -->
   <div id="accountModal" class="modal hidden">
@@ -144,7 +140,7 @@
     </div>
   </div>
 
-  <!-- ===========================
+  <!-- ==========================
        プロフィール編集モーダル
   ============================ -->
   <div id="editProfileModal" class="modal hidden">
@@ -170,16 +166,13 @@
           <textarea id="editBioInput" rows="4"></textarea>
         </label>
 
-        <button id="saveProfileBtn" class="primary">
-          保存する
-        </button>
-
+        <button id="saveProfileBtn" class="primary">保存する</button>
         <div id="editProfileError" class="account-error"></div>
       </div>
     </div>
   </div>
 
-  <!-- ===========================
+  <!-- ==========================
        ボトムナビ（スマホ）
   ============================ -->
   <nav class="bottom-nav">
@@ -195,9 +188,14 @@
       <span class="icon">👤</span>
       <span>プロフィール</span>
     </a>
+
+    <!-- ★ モバイル専用のアカウントボタン -->
+    <button type="button" class="bottom-nav-item" id="switchAccountBtnMobile">
+      <span class="icon">🔑</span>
+      <span>アカウント</span>
+    </button>
   </nav>
 
-  <!-- 共通スクリプト -->
   <script src="script.js"></script>
 </body>
 </html>
