@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>通知 | StepLink</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar-left">
+      <div class="logo">StepLink</div>
+      <nav class="nav">
+        <a href="index.html" class="nav-item">ホーム</a>
+        <a href="messages.html" class="nav-item">メッセージ</a>
+        <a href="notifications.html" class="nav-item active">通知</a>
+        <a href="profile.html" class="nav-item">プロフィール</a>
+      </nav>
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
+      <button class="post-button" id="openModalBtn">投稿する</button>
+
+      <div class="account-summary">
+        <div class="account-main">
+          <div class="account-avatar" id="currentUserAvatar">🧑‍💻</div>
+          <div>
+            <div class="account-name" id="currentUserName">未ログイン</div>
+            <div class="account-handle" id="currentUserHandle"></div>
+          </div>
+        </div>
+        <button id="switchAccountBtn" class="icon-btn small">アカウント</button>
+      </div>
+    </aside>
+
+    <main class="timeline" id="notificationsPage">
+      <header class="timeline-header"><h1>通知</h1></header>
+      <section id="notificationsContainer" class="posts"></section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
