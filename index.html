@@ -11,7 +11,7 @@
 </head>
 <body data-theme="light">
   <div class="app">
-    <!-- ===========================
+    <!-- ==========================
          左サイドバー（PC）
     ============================ -->
     <aside class="sidebar-left">
@@ -23,6 +23,7 @@
         <a href="profile.html" class="nav-item">プロフィール</a>
       </nav>
 
+      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
       <button class="post-button" id="openModalBtn">投稿する</button>
 
       <div class="account-summary">
@@ -38,31 +39,24 @@
       </div>
     </aside>
 
-    <!-- ===========================
-         メインタイムライン
+    <!-- ==========================
+         ホーム画面
     ============================ -->
     <main class="timeline">
       <header class="timeline-header">
         <h1>ホーム</h1>
       </header>
 
-      <!-- 新規投稿カード -->
       <section class="new-post-card">
-        <!-- ★ ここがプロフィール絵文字と連動する -->
         <div class="avatar" id="composerAvatar">🧑‍💻</div>
         <div class="new-post-body">
-          <textarea
-            id="tweetInput"
-            placeholder="いまどうしてる？"
-            rows="3"
-          ></textarea>
+          <textarea id="tweetInput" placeholder="いまどうしてる？"></textarea>
 
           <div class="image-preview" id="imagePreview"></div>
 
           <div class="new-post-actions">
             <button class="icon-btn" id="imageSelectBtn">🖼 画像</button>
             <span class="char-counter" id="charCounter">0 / 140</span>
-
             <button id="postTweetBtn">投稿</button>
           </div>
 
@@ -70,33 +64,12 @@
         </div>
       </section>
 
-      <!-- タイムライン投稿一覧 -->
+      <!-- 投稿一覧 -->
       <section id="tweetsContainer" class="posts"></section>
+    </main>
+  </div>
 
-
-  <!-- ===========================
-       ボトムナビ（スマホ用）
-  ============================ -->
-  <nav class="bottom-nav">
-    <a href="index.html" class="bottom-nav-item active">
-      <span class="icon">🏠</span>
-      <span>ホーム</span>
-    </a>
-    <a href="messages.html" class="bottom-nav-item">
-      <span class="icon">💬</span>
-      <span>メッセージ</span>
-    </a>
-    <a href="profile.html" class="bottom-nav-item">
-      <span class="icon">👤</span>
-      <span>プロフィール</span>
-    </a>
-    <button class="bottom-nav-item" id="bottomAccountBtn">
-      <span class="icon">⚙️</span>
-      <span>アカウント</span>
-    </button>
-  </nav>
-
-  <!-- ===========================
+  <!-- ==========================
        投稿モーダル
   ============================ -->
   <div id="tweetModal" class="modal hidden">
@@ -107,29 +80,22 @@
       </header>
 
       <section class="modal-body">
-        <div class="new-post-body">
-          <textarea
-            id="tweetInputModal"
-            placeholder="いまどうしてる？"
-            rows="3"
-          ></textarea>
+        <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
 
-          <div class="image-preview" id="imagePreviewModal"></div>
+        <div class="image-preview" id="imagePreviewModal"></div>
 
-          <div class="new-post-actions">
-            <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
-            <span class="char-counter" id="charCounterModal">0 / 140</span>
-
-            <button id="postTweetBtnModal" class="primary">投稿</button>
-          </div>
-
-          <input type="file" id="imageInputModal" accept="image/*" hidden />
+        <div class="new-post-actions">
+          <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+          <span class="char-counter" id="charCounterModal">0 / 140</span>
+          <button id="postTweetBtnModal" class="primary">投稿</button>
         </div>
+
+        <input type="file" id="imageInputModal" accept="image/*" hidden />
       </section>
     </div>
   </div>
 
-  <!-- ===========================
+  <!-- ==========================
        アカウントモーダル
   ============================ -->
   <div id="accountModal" class="modal hidden">
@@ -147,73 +113,51 @@
 
         <!-- ログイン -->
         <div id="accountLoginView">
-          <label>
-            メール
-            <input id="loginHandleInput" type="email" />
-          </label>
-          <label>
-            パスワード
-            <input id="loginPasswordInput" type="password" />
-          </label>
+          <label>メール<input id="loginHandleInput" type="email"></label>
+          <label>パスワード<input id="loginPasswordInput" type="password"></label>
           <button class="primary" id="loginSubmitBtn">ログイン</button>
           <div id="loginError" class="account-error"></div>
         </div>
 
         <!-- 新規登録 -->
         <div id="accountRegisterView" class="hidden">
-          <label>
-            名前
-            <input id="regNameInput" type="text" />
-          </label>
-          <label>
-            ハンドル（@なし）
-            <input id="regHandleInput" type="text" />
-          </label>
-          <label>
-            メール
-            <input id="regEmailInput" type="email" />
-          </label>
-          <label>
-            絵文字
-            <input id="regAvatarInput" type="text" placeholder="🧑‍💻" />
-          </label>
-          <label>
-            パスワード
-            <input id="regPasswordInput" type="password" />
-          </label>
-          <button class="primary" id="registerSubmitBtn">
-            アカウント作成
-          </button>
+          <label>名前<input id="regNameInput" type="text"></label>
+          <label>ハンドル（@なし）<input id="regHandleInput" type="text"></label>
+          <label>メール<input id="regEmailInput" type="email"></label>
+          <label>絵文字<input id="regAvatarInput" type="text" placeholder="🎣"></label>
+          <label>パスワード<input id="regPasswordInput" type="password"></label>
+          <button class="primary" id="registerSubmitBtn">アカウント作成</button>
           <div id="registerError" class="account-error"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ===========================
-       返信モーダル
+  <!-- ==========================
+       ボトムナビ（スマホ）
   ============================ -->
-  <div id="replyModal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <header class="modal-header">
-        <button id="closeReplyModal" class="icon-btn">✕</button>
-      </header>
+  <nav class="bottom-nav">
+    <a href="index.html" class="bottom-nav-item active">
+      <span class="icon">🏠</span>
+      <span>ホーム</span>
+    </a>
+    <a href="messages.html" class="bottom-nav-item">
+      <span class="icon">💬</span>
+      <span>メッセージ</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <span class="icon">👤</span>
+      <span>プロフィール</span>
+    </a>
 
-      <div class="modal-body">
-        <textarea
-          id="replyInput"
-          placeholder="返信を書く…"
-          rows="3"
-        ></textarea>
-        <button id="sendReplyBtn" class="primary">返信する</button>
-      </div>
-    </div>
-  </div>
+    <!-- ★ スマホ用ログインボタン -->
+    <button type="button" class="bottom-nav-item" id="switchAccountBtnMobile">
+      <span class="icon">🔑</span>
+      <span>アカウント</span>
+    </button>
+  </nav>
 
-  <!-- ===========================
-       メインスクリプト
-  ============================ -->
+  <!-- 共通スクリプト -->
   <script src="script.js"></script>
 </body>
 </html>
