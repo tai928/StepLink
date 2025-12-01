@@ -5,25 +5,21 @@
   <title>StepLink</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body data-theme="light">
+<body>
   <div class="app">
-    <!-- ==========================
-         左サイドバー（PC）
-    ============================ -->
+    <!-- 左サイドバー（PC） -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
 
       <nav class="nav">
         <a href="index.html" class="nav-item active">ホーム</a>
         <a href="messages.html" class="nav-item">メッセージ</a>
+        <a href="notifications.html" class="nav-item">通知</a>
         <a href="profile.html" class="nav-item">プロフィール</a>
       </nav>
 
-      <button id="themeToggle" class="icon-btn theme-toggle">🌙</button>
       <button class="post-button" id="openModalBtn">投稿する</button>
 
       <div class="account-summary">
@@ -39,14 +35,13 @@
       </div>
     </aside>
 
-    <!-- ==========================
-         ホーム画面
-    ============================ -->
+    <!-- ホームタイムライン -->
     <main class="timeline">
       <header class="timeline-header">
         <h1>ホーム</h1>
       </header>
 
+      <!-- 新規投稿 -->
       <section class="new-post-card">
         <div class="avatar" id="composerAvatar">🧑‍💻</div>
         <div class="new-post-body">
@@ -69,9 +64,7 @@
     </main>
   </div>
 
-  <!-- ==========================
-       投稿モーダル
-  ============================ -->
+  <!-- 投稿モーダル -->
   <div id="tweetModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -79,21 +72,24 @@
         <button id="closeModalBtn" class="icon-btn">✕</button>
       </header>
 
-      <section class="modal-body">
-        <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
+      <section class="new-post-card modal-body">
+        <div class="avatar" id="composerAvatarModal">🧑‍💻</div>
+        <div class="new-post-body">
+          <textarea id="tweetInputModal" placeholder="いまどうしてる？"></textarea>
+          <div class="image-preview" id="imagePreviewModal"></div>
 
-        <div class="image-preview" id="imagePreviewModal"></div>
+          <div class="new-post-actions">
+            <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
+            <span class="char-counter" id="charCounterModal">0 / 140</span>
+            <button id="postTweetBtnModal" class="primary">投稿</button>
+          </div>
 
-        <div class="new-post-actions">
-          <button class="icon-btn" id="imageSelectBtnModal">🖼 画像</button>
-          <span class="char-counter" id="charCounterModal">0 / 140</span>
-          <button id="postTweetBtnModal" class="primary">投稿</button>
+          <input type="file" id="imageInputModal" accept="image/*" hidden />
         </div>
-
-        <input type="file" id="imageInputModal" accept="image/*" hidden />
       </section>
     </div>
   </div>
+
   <!-- 返信モーダル -->
   <div id="replyModal" class="modal hidden">
     <div class="modal-backdrop"></div>
@@ -106,21 +102,16 @@
         <div class="avatar" id="replyAvatar">🧑‍💻</div>
         <div class="new-post-body">
           <textarea id="replyInput" placeholder="返信を入力してね"></textarea>
-
           <div class="new-post-actions">
-            <div class="left-actions">
-              <span class="char-counter" id="replyCounter">0 / 140</span>
-            </div>
-            <button id="replyPostBtn">返信</button>
+            <span class="char-counter" id="replyCounter">0 / 140</span>
+            <button id="replyPostBtn" class="primary">返信</button>
           </div>
         </div>
       </section>
     </div>
   </div>
 
-  <!-- ==========================
-       アカウントモーダル
-  ============================ -->
+  <!-- アカウントモーダル -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -136,19 +127,19 @@
 
         <!-- ログイン -->
         <div id="accountLoginView">
-          <label>メール<input id="loginHandleInput" type="email"></label>
-          <label>パスワード<input id="loginPasswordInput" type="password"></label>
+          <label>メール<input id="loginHandleInput" type="email" /></label>
+          <label>パスワード<input id="loginPasswordInput" type="password" /></label>
           <button class="primary" id="loginSubmitBtn">ログイン</button>
           <div id="loginError" class="account-error"></div>
         </div>
 
         <!-- 新規登録 -->
         <div id="accountRegisterView" class="hidden">
-          <label>名前<input id="regNameInput" type="text"></label>
-          <label>ハンドル（@なし）<input id="regHandleInput" type="text"></label>
-          <label>メール<input id="regEmailInput" type="email"></label>
-          <label>絵文字<input id="regAvatarInput" type="text" placeholder="🎣"></label>
-          <label>パスワード<input id="regPasswordInput" type="password"></label>
+          <label>名前<input id="regNameInput" type="text" /></label>
+          <label>ハンドル（@なし）<input id="regHandleInput" type="text" /></label>
+          <label>メール<input id="regEmailInput" type="email" /></label>
+          <label>絵文字<input id="regAvatarInput" type="text" placeholder="🎣" /></label>
+          <label>パスワード<input id="regPasswordInput" type="password" /></label>
           <button class="primary" id="registerSubmitBtn">アカウント作成</button>
           <div id="registerError" class="account-error"></div>
         </div>
@@ -156,31 +147,25 @@
     </div>
   </div>
 
-  <!-- ==========================
-       ボトムナビ（スマホ）
-  ============================ -->
+  <!-- ボトムナビ（スマホ） -->
   <nav class="bottom-nav">
     <a href="index.html" class="bottom-nav-item active">
-      <span class="icon">🏠</span>
-      <span>ホーム</span>
+      <span class="icon">🏠</span><span>ホーム</span>
     </a>
     <a href="messages.html" class="bottom-nav-item">
-      <span class="icon">💬</span>
-      <span>メッセージ</span>
+      <span class="icon">💬</span><span>メッセージ</span>
+    </a>
+    <a href="notifications.html" class="bottom-nav-item">
+      <span class="icon">🔔</span><span>通知</span>
     </a>
     <a href="profile.html" class="bottom-nav-item">
-      <span class="icon">👤</span>
-      <span>プロフィール</span>
+      <span class="icon">👤</span><span>プロフィール</span>
     </a>
-
-    <!-- ★ スマホ用ログインボタン -->
     <button type="button" class="bottom-nav-item" id="switchAccountBtnMobile">
-      <span class="icon">🔑</span>
-      <span>アカウント</span>
+      <span class="icon">🔑</span><span>アカウント</span>
     </button>
   </nav>
 
-  <!-- 共通スクリプト -->
   <script src="script.js"></script>
 </body>
 </html>
