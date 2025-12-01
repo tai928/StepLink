@@ -10,9 +10,11 @@
 body {
   margin: 0;
   padding: 0;
+  padding-left: 240px; /* ★サイドバーの分だけ中身を右にずらす */
   font-family: "Helvetica Neue", Arial, sans-serif;
   background: #f4f4f4;
   color: #222;
+  min-height: 100vh;
 }
 
 /* 色定義（緑テーマ） */
@@ -150,12 +152,10 @@ body {
    タイムライン
 =========================== */
 .timeline {
-  margin-left: 240px;
   flex: 1;
+  max-width: 700px;          /* ★PC のタイムライン幅 */
   padding: 0 0 40px;
-  max-width: 700px;
-  margin-right: auto;
-  margin-bottom: 64px;
+  margin: 0 auto 64px;       /* ★body の中で中央寄せ */
 }
 
 .timeline-header {
@@ -286,6 +286,8 @@ textarea {
 .post-text {
   margin-top: 6px;
   font-size: 15px;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 .post-footer {
   margin-top: 8px;
@@ -532,6 +534,8 @@ textarea {
   display: flex;
   height: calc(100vh - 70px);
   background: #fafafa;
+  max-width: 900px;       /* DM も中央寄せ */
+  margin: 0 auto;
 }
 
 .dm-sidebar {
@@ -695,14 +699,17 @@ textarea {
    レスポンシブ
 =========================== */
 @media (max-width: 900px) {
+  body {
+    padding-left: 0;          /* スマホではサイドバー余白なし */
+  }
+
   .sidebar-left {
     display: none;
   }
 
   .timeline {
-    margin-left: 0;
     max-width: 100%;
-    margin-right: 0;
+    margin: 0;
     padding-bottom: 80px;
   }
 
@@ -717,6 +724,7 @@ textarea {
   .dm-layout {
     flex-direction: column;
     height: auto;
+    max-width: 100%;
   }
   .dm-sidebar {
     width: 100%;
