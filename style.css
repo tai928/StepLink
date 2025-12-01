@@ -10,11 +10,9 @@
 body {
   margin: 0;
   padding: 0;
-  padding-left: 240px; /* ★サイドバーの分だけ中身を右にずらす */
   font-family: "Helvetica Neue", Arial, sans-serif;
   background: #f4f4f4;
   color: #222;
-  min-height: 100vh;
 }
 
 /* 色定義（緑テーマ） */
@@ -152,10 +150,12 @@ body {
    タイムライン
 =========================== */
 .timeline {
+  margin-left: 240px;
   flex: 1;
-  max-width: 700px;          /* ★PC のタイムライン幅 */
   padding: 0 0 40px;
-  margin: 0 auto 64px;       /* ★body の中で中央寄せ */
+  max-width: 700px;
+  margin-right: auto;
+  margin-bottom: 64px;
 }
 
 .timeline-header {
@@ -286,11 +286,50 @@ textarea {
 .post-text {
   margin-top: 6px;
   font-size: 15px;
-  word-wrap: break-word;
-  word-break: break-word;
 }
+
+/* 返信ボタン＆いいね周り */
 .post-footer {
   margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.reply-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: none;
+  background: #f1f1f1;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* いいねボタン */
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: none;
+  background: #f1f1f1;
+  cursor: pointer;
+  font-size: 13px;
+}
+.like-btn .like-heart {
+  font-size: 14px;
+}
+.like-btn .like-count {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.like-btn.liked {
+  background: #e8f3da;
+  color: var(--green-main);
+}
+.like-btn.liked .like-heart {
+  font-weight: bold;
 }
 
 /* プロフィールリンクっぽく */
@@ -534,8 +573,6 @@ textarea {
   display: flex;
   height: calc(100vh - 70px);
   background: #fafafa;
-  max-width: 900px;       /* DM も中央寄せ */
-  margin: 0 auto;
 }
 
 .dm-sidebar {
@@ -634,20 +671,43 @@ textarea {
   text-align: right;
 }
 
+/* 入力エリア（比率調整済み） */
 .dm-input-area {
   display: flex;
   padding: 8px 10px;
   border-top: 1px solid var(--line);
   background: #fff;
   gap: 8px;
+  align-items: flex-end;
 }
 .dm-input-area textarea {
   flex: 1;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 6px;
+  padding: 6px 8px;
   resize: none;
   font-size: 14px;
+  min-height: 40px;
+  max-height: 96px;
+}
+
+/* 送信ボタン */
+.dm-send-btn {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: var(--green-main);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.dm-send-btn:hover {
+  background: var(--green-hover);
+}
+.dm-send-btn:active {
+  background: var(--green-press);
 }
 
 /* ===========================
@@ -699,17 +759,14 @@ textarea {
    レスポンシブ
 =========================== */
 @media (max-width: 900px) {
-  body {
-    padding-left: 0;          /* スマホではサイドバー余白なし */
-  }
-
   .sidebar-left {
     display: none;
   }
 
   .timeline {
+    margin-left: 0;
     max-width: 100%;
-    margin: 0;
+    margin-right: 0;
     padding-bottom: 80px;
   }
 
@@ -724,7 +781,6 @@ textarea {
   .dm-layout {
     flex-direction: column;
     height: auto;
-    max-width: 100%;
   }
   .dm-sidebar {
     width: 100%;
