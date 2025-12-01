@@ -7,46 +7,55 @@ const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // URLパラメータ（相手プロフィール用） ?u=handle
+  const urlParams = new URLSearchParams(location.search);
+  const viewingHandle = urlParams.get("u"); // null → 自分 / 文字列 → 相手
+
   // ログイン中ユーザー
   let currentUser = null;
   let currentProfile = null;
 
-  // 共通で使うDOM
-  const tweetsContainer = document.getElementById("tweetsContainer"); // ホーム用
-  const profileTweetsContainer = document.getElementById(
-    "profileTweetsContainer"
-  ); // プロフ用
+  // プロフィール画面で「誰の」プロフィールを表示するか
+  let viewingProfileUserId = null; // profiles.id / auth.user.id
 
-  // サイドバー＆プロフィール表示パーツ
+  // -------------------------
+  // DOM 参照
+  // -------------------------
+  const tweetsContainer = document.getElementById("tweetsContainer"); // ホーム用
+  const profileTweetsContainer = document.getElementById("profileTweetsContainer"); // プロフ用
+
+  // サイドバー & コンポーザー
   const sidebarNameEl = document.getElementById("currentUserName");
   const sidebarHandleEl = document.getElementById("currentUserHandle");
   const sidebarAvatarEl = document.getElementById("currentUserAvatar");
 
-  const profileNameEl = document.getElementById("profileName");
-  const profileHandleEl = document.getElementById("profileHandle");
-  const profileAvatarEl = document.getElementById("profileAvatar");
-  const profileBioEl = document.querySelector(".profile-bio");
-
   const composerAvatarHome = document.getElementById("composerAvatar");
   const composerAvatarModal = document.getElementById("composerAvatarModal");
 
-  // ログアウトボタン
   const logoutBtn = document.getElementById("logoutBtn");
 
+  // プロフィール表示用 DOM（自分 / 相手共通）
+  const profileNameEl = document.getElementById("profileName");
+  const profileHandleEl = document.getElementById("profileHandle");
+  const profileAvatarEl = document.getElementById("profileAvatar");
+  const profileBioEl =
+    document.getElementById("profileBio") ||
+    document.querySelector(".profile-bio");
+
   // ==============================
-  // テーマ切り替え（見た目だけ）
+  // テーマ切り替え（見た目だけ・実質ライト固定）
   // ==============================
   const themeToggleBtn = document.getElementById("themeToggle");
   const savedTheme = localStorage.getItem("steplink-theme");
   if (savedTheme === "light" || savedTheme === "dark") {
-    document.body.setAttribute("data-theme", savedTheme);
+    document.body.setAttribute("data-theme", "light");
+  } else {
+    document.body.setAttribute("data-theme", "light");
   }
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", () => {
-      const now = document.body.getAttribute("data-theme") || "light";
-      const next = now === "dark" ? "light" : "light"; // ダーク無し・常にライト
-      document.body.setAttribute("data-theme", next);
-      localStorage.setItem("steplink-theme", next);
+      document.body.setAttribute("data-theme", "light");
+      localStorage.setItem("steplink-theme", "light");
     });
   }
 
@@ -58,16 +67,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (error || !data.user) {
       currentUser = null;
       currentProfile = null;
-      applyUserUI(null, null);
+      applySidebarUI(null, null);
       return;
     }
 
     currentUser = data.user;
 
-    // profiles から取得
     const { data: p, error: pErr } = await supabaseClient
       .from("profiles")
-      .select("name, handle, avatar, bio")
+      .select("id, name, handle, avatar, bio")
       .eq("id", currentUser.id)
       .maybeSingle();
 
@@ -76,21 +84,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     currentProfile = p || null;
 
-    // なければ auth の metadata から
-    applyUserUI(currentUser, currentProfile);
+    applySidebarUI(currentUser, currentProfile);
   }
 
-  // UI反映
-  function applyUserUI(user, profile) {
+  // サイドバー & コンポーザー用 UI
+  function applySidebarUI(user, profile) {
     if (!user) {
       if (sidebarNameEl) sidebarNameEl.textContent = "未ログイン";
       if (sidebarHandleEl) sidebarHandleEl.textContent = "";
       if (sidebarAvatarEl) sidebarAvatarEl.textContent = "🧑‍💻";
-
-      if (profileNameEl) profileNameEl.textContent = "StepLinkユーザー";
-      if (profileHandleEl) profileHandleEl.textContent = "@user";
-      if (profileAvatarEl) profileAvatarEl.textContent = "🧑‍💻";
-      if (profileBioEl) profileBioEl.textContent = "プロフィールはまだ書かれていません";
 
       if (composerAvatarHome) composerAvatarHome.textContent = "🧑‍💻";
       if (composerAvatarModal) composerAvatarModal.textContent = "🧑‍💻";
@@ -102,20 +104,37 @@ document.addEventListener("DOMContentLoaded", async () => {
       profile?.handle || user.user_metadata?.handle || "user";
     const avatar =
       profile?.avatar || user.user_metadata?.avatar || "🧑‍💻";
-    const bio =
-      profile?.bio || user.user_metadata?.bio || "プロフィールはまだ書かれていません";
 
     if (sidebarNameEl) sidebarNameEl.textContent = name;
     if (sidebarHandleEl) sidebarHandleEl.textContent = "@" + handle;
     if (sidebarAvatarEl) sidebarAvatarEl.textContent = avatar;
 
-    if (profileNameEl) profileNameEl.textContent = name;
-    if (profileHandleEl) profileHandleEl.textContent = "@" + handle;
-    if (profileAvatarEl) profileAvatarEl.textContent = avatar;
-    if (profileBioEl) profileBioEl.textContent = bio;
-
     if (composerAvatarHome) composerAvatarHome.textContent = avatar;
     if (composerAvatarModal) composerAvatarModal.textContent = avatar;
+  }
+
+  // プロフィール画面に表示するユーザーの UI（自分でも相手でも）
+  function applyProfileViewUI(profileData) {
+    if (!profileNameEl && !profileHandleEl && !profileAvatarEl && !profileBioEl) {
+      return; // プロフ画面じゃないとき
+    }
+
+    if (!profileData) {
+      if (profileNameEl) profileNameEl.textContent = "ユーザーが見つかりません";
+      if (profileHandleEl) profileHandleEl.textContent = "";
+      if (profileAvatarEl) profileAvatarEl.textContent = "❓";
+      if (profileBioEl) profileBioEl.textContent = "";
+      return;
+    }
+
+    const { name, handle, avatar, bio } = profileData;
+
+    if (profileNameEl) profileNameEl.textContent = name || "StepLinkユーザー";
+    if (profileHandleEl) profileHandleEl.textContent = handle ? "@" + handle : "@user";
+    if (profileAvatarEl) profileAvatarEl.textContent = avatar || "🧑‍💻";
+    if (profileBioEl)
+      profileBioEl.textContent =
+        bio || "プロフィールはまだ書かれていません";
   }
 
   await loadAuthState();
@@ -131,10 +150,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ==============================
-  // アカウントモーダル（ログイン/登録）
+  // アカウントモーダル（PC & モバイル共通）
   // ==============================
   const accountModal = document.getElementById("accountModal");
-  const switchAccountBtn = document.getElementById("switchAccountBtn");
+  const switchAccountBtn = document.getElementById("switchAccountBtn"); // サイドバー
+  const switchAccountBtnMobile = document.getElementById("switchAccountBtnMobile"); // ボトムナビ
   const closeAccountModalBtn = document.getElementById("closeAccountModalBtn");
   const accountBackdrop = accountModal?.querySelector(".modal-backdrop");
 
@@ -148,6 +168,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (switchAccountBtn && accountModal) {
     switchAccountBtn.addEventListener("click", openAccountModal);
   }
+  if (switchAccountBtnMobile && accountModal) {
+    switchAccountBtnMobile.addEventListener("click", openAccountModal);
+  }
   if (closeAccountModalBtn) {
     closeAccountModalBtn.addEventListener("click", closeAccountModal);
   }
@@ -155,7 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     accountBackdrop.addEventListener("click", closeAccountModal);
   }
 
-  // タブ切替
+  // タブ切り替え
   const accountTabs = document.querySelectorAll(".account-tab");
   const accountLoginView = document.getElementById("accountLoginView");
   const accountRegisterView = document.getElementById("accountRegisterView");
@@ -286,20 +309,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ==============================
-  // 🎣 プロフィール編集
+  // プロフィール編集
   // ==============================
   const editProfileBtn = document.getElementById("editProfileBtn");
   const editProfileModal = document.getElementById("editProfileModal");
-  const closeEditProfileModalBtn = document.getElementById("closeEditProfileModal");
+  const closeEditProfileModalBtn = document.getElementById(
+    "closeEditProfileModal"
+  );
   const editNameInput = document.getElementById("editNameInput");
   const editAvatarInput = document.getElementById("editAvatarInput");
   const editBioInput = document.getElementById("editBioInput");
   const saveProfileBtn = document.getElementById("saveProfileBtn");
   const editProfileError = document.getElementById("editProfileError");
-  const editProfileBackdrop = editProfileModal?.querySelector(".modal-backdrop");
-
-  // デバッグログ（ちゃんと拾えてるか確認用）
-  console.log("editProfileBtn exists?", !!editProfileBtn);
+  const editProfileBackdrop =
+    editProfileModal?.querySelector(".modal-backdrop");
 
   function openEditProfileModal() {
     if (!editProfileModal || !currentUser) return;
@@ -330,18 +353,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (editProfileModal) editProfileModal.classList.add("hidden");
   }
 
-  // ボタンクリックで開く
   if (editProfileBtn) {
     editProfileBtn.addEventListener("click", () => {
       if (!currentUser) {
         alert("ログインしてから編集してね🥺");
         return;
       }
+      // 他人のプロフィールを見てるときは編集ボタン非表示にしてるはず
       openEditProfileModal();
     });
   }
-
-  // ×ボタン・背景クリックで閉じる
   if (closeEditProfileModalBtn) {
     closeEditProfileModalBtn.addEventListener("click", closeEditProfileModal);
   }
@@ -349,7 +370,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     editProfileBackdrop.addEventListener("click", closeEditProfileModal);
   }
 
-  // 保存ボタン
   if (saveProfileBtn) {
     saveProfileBtn.addEventListener("click", async () => {
       if (!currentUser) return;
@@ -359,9 +379,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const bio = editBioInput?.value.trim() || "";
 
       if (!name || !avatar) {
-        if (editProfileError) {
+        if (editProfileError)
           editProfileError.textContent = "名前とアイコンは必須だよ🥺";
-        }
         return;
       }
 
@@ -372,35 +391,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentUser.user_metadata?.handle ||
         "user";
 
-      // profiles を更新
-      const { error: pErr } = await supabaseClient
-        .from("profiles")
-        .upsert({
-          id: currentUser.id,
-          name,
-          handle,
-          avatar,
-          bio,
-        });
-
+      const { error: pErr } = await supabaseClient.from("profiles").upsert({
+        id: currentUser.id,
+        name,
+        handle,
+        avatar,
+        bio,
+      });
       if (pErr) {
         console.error("profile update error:", pErr);
-        if (editProfileError) {
+        if (editProfileError)
           editProfileError.textContent = "プロフィール更新に失敗した…😭";
-        }
         return;
       }
 
-      // auth.user_metadata も更新（任意）
       const { error: authErr } = await supabaseClient.auth.updateUser({
         data: { name, handle, avatar, bio },
       });
-
       if (authErr) {
         console.error("auth update error:", authErr);
       }
 
-      // ローカルキャッシュ更新＋UI反映
       currentProfile = {
         ...(currentProfile || {}),
         name,
@@ -408,12 +419,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         avatar,
         bio,
       };
-      applyUserUI(currentUser, currentProfile);
+      applySidebarUI(currentUser, currentProfile);
+
+      // 自分のプロフィールを表示中なら、表示も更新
+      if (viewingProfileUserId === currentUser.id) {
+        applyProfileViewUI({
+          name,
+          handle,
+          avatar,
+          bio,
+        });
+      }
 
       closeEditProfileModal();
     });
   }
-
 
   // ==============================
   // 文字数カウンタ & 画像プレビュー
@@ -460,7 +480,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ホーム用コンポーザーがあるページ
+  // ホーム用コンポーザー
   setupComposer({
     input: document.getElementById("tweetInput"),
     counter: document.getElementById("charCounter"),
@@ -480,7 +500,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     submitBtn: document.getElementById("postTweetBtnModal"),
   });
 
-  // 投稿共通
+  // 投稿処理
   async function handlePostFrom(input, counter, preview, parentId = null) {
     if (!input) return;
     const text = input.value.trim();
@@ -497,7 +517,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (preview) preview.innerHTML = "";
 
     if (tweetsContainer) await loadTimeline();
-    if (profileTweetsContainer) await loadProfileTimeline();
+    if (profileTweetsContainer && viewingProfileUserId) {
+      await loadProfileTimeline(viewingProfileUserId);
+    }
   }
 
   async function createTweet(text, parentId = null) {
@@ -535,7 +557,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ==============================
-  // タイムライン表示
+  // タイムライン & 返信
   // ==============================
   function formatTime(iso) {
     if (!iso) return "";
@@ -551,9 +573,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     article.dataset.tweetId = row.id;
 
     article.innerHTML = `
-      <div class="post-avatar">${row.avatar || "🧑‍💻"}</div>
+      <div class="post-avatar post-user-click">${row.avatar || "🧑‍💻"}</div>
       <div class="post-body">
-        <div class="post-header">
+        <div class="post-header post-user-area">
           <span class="post-name">${row.name}</span>
           <span class="post-handle">@${row.handle}</span>
           <span class="post-time">${formatTime(row.created_at)}</span>
@@ -571,6 +593,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
     article.querySelector(".post-text").textContent = row.content || "";
     container.appendChild(article);
+
+    // アイコン・名前・ハンドルクリックでプロフィールへ
+    const userArea = article.querySelector(".post-user-area");
+    const avatarArea = article.querySelector(".post-avatar.post-user-click");
+    const goProfile = () => {
+      if (row.handle) {
+        location.href = `profile.html?u=${encodeURIComponent(row.handle)}`;
+      }
+    };
+    if (userArea) userArea.addEventListener("click", goProfile);
+    if (avatarArea) avatarArea.addEventListener("click", goProfile);
 
     return article;
   }
@@ -630,7 +663,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const repliesContainer = article.querySelector(".replies");
       await loadReplies(row.id, repliesContainer);
 
-      // 返信ボタン
       const replyBtn = article.querySelector(".reply-button");
       if (replyBtn) {
         replyBtn.addEventListener("click", async () => {
@@ -643,12 +675,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  async function loadProfileTimeline() {
-    if (!profileTweetsContainer || !currentUser) return;
+  async function loadProfileTimeline(userId) {
+    if (!profileTweetsContainer || !userId) return;
     const { data, error } = await supabaseClient
       .from("tweets")
       .select("*")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", userId)
       .is("parent_id", null)
       .order("created_at", { ascending: false });
 
@@ -663,17 +695,87 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // ==============================
+  // プロフィールページ用セットアップ
+  // ==============================
+  async function setupProfileView() {
+    if (!profileNameEl && !profileTweetsContainer) return; // プロフじゃない
+
+    // URLに ?u=handle がある → 相手のプロフィール
+    if (viewingHandle) {
+      const { data: p, error } = await supabaseClient
+        .from("profiles")
+        .select("id, name, handle, avatar, bio")
+        .eq("handle", viewingHandle)
+        .maybeSingle();
+
+      if (error) {
+        console.error("view profile load error:", error);
+        applyProfileViewUI(null);
+        if (editProfileBtn) editProfileBtn.style.display = "none";
+        return;
+      }
+
+      if (!p) {
+        applyProfileViewUI(null);
+        if (editProfileBtn) editProfileBtn.style.display = "none";
+        return;
+      }
+
+      viewingProfileUserId = p.id;
+      applyProfileViewUI(p);
+
+      // 自分のプロフィールを見てるときだけ編集ボタン出す
+      if (editProfileBtn) {
+        if (currentUser && currentUser.id === p.id) {
+          editProfileBtn.style.display = "inline-block";
+        } else {
+          editProfileBtn.style.display = "none";
+        }
+      }
+
+      await loadProfileTimeline(viewingProfileUserId);
+      return;
+    }
+
+    // ?u= なし → 自分のプロフィール
+    if (!currentUser) {
+      // 未ログイン
+      applyProfileViewUI({
+        name: "StepLinkユーザー",
+        handle: "user",
+        avatar: "🧑‍💻",
+        bio: "ログインするとプロフィールを編集できます",
+      });
+      if (editProfileBtn) editProfileBtn.style.display = "none";
+      return;
+    }
+
+    const name =
+      currentProfile?.name || currentUser.user_metadata?.name || "StepLinkユーザー";
+    const handle =
+      currentProfile?.handle || currentUser.user_metadata?.handle || "user";
+    const avatar =
+      currentProfile?.avatar || currentUser.user_metadata?.avatar || "🧑‍💻";
+    const bio =
+      currentProfile?.bio || currentUser.user_metadata?.bio || "プロフィールはまだ書かれていません";
+
+    viewingProfileUserId = currentUser.id;
+
+    applyProfileViewUI({ name, handle, avatar, bio });
+
+    if (editProfileBtn) editProfileBtn.style.display = "inline-block";
+
+    await loadProfileTimeline(viewingProfileUserId);
+  }
+
+  // ==============================
+  // ホームタイムライン / プロフ表示 初期ロード
+  // ==============================
   if (tweetsContainer) {
     await loadTimeline();
   }
-  if (profileTweetsContainer) {
-    await loadProfileTimeline();
-  }
-// モバイル（ボトムナビ）のアカウントボタン
-const switchAccountBtnMobile = document.getElementById("switchAccountBtnMobile");
-if (switchAccountBtnMobile && accountModal) {
-  switchAccountBtnMobile.addEventListener("click", openAccountModal);
-}
+  await setupProfileView();
 
   // ==============================
   // 投稿モーダル開閉
