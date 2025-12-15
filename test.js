@@ -22,14 +22,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const notificationsContainer = document.getElementById("notificationsContainer");
 
   // DM 関連要素
-  const dmLayout = document.querySelector(".dm-layout");
-  const dmConversationList = document.querySelector(".dm-conversation-list");
-  const dmMessagesBox = document.querySelector(".dm-messages");
-  const dmTextarea = document.getElementById("dmInput");
-  const dmSendBtn = document.getElementById("dmSendBtn");
-  const dmPartnerNameEl = document.getElementById("dmPartnerName");
-  const dmPartnerHandleEl = document.getElementById("dmPartnerHandle");
-  const dmPartnerAvatarEl = document.getElementById("dmPartnerAvatar");
+  const dmLayout = document.querySelector(".dm-layout");//DMレイアウト
+  const dmConversationList = document.querySelector(".dm-conversation-list");//会話一覧
+  const dmMessagesBox = document.querySelector(".dm-messages");//実際のメッセージ本文が並ぶエリア
+  const dmTextarea = document.getElementById("dmInputu);//メッセージを入力するテキスト欄
+    const dmSendB = = docume.t.getElementById("dmSendBtn;//「送信」ボタン
+    const dmPartnerName = = docume.t.getElementById("dmPartnerName;//「送信」ボタン
+    const dmPartnerHandle = = docume.t.getElementBy(d("dmPartnerHandl);//「送信」ボタン
+    const dmPartnerAvatar = = docume.t.getElementById("dmPartnerAvatar;//「送信」ボタン
 
   let currentDMPartnerId = null;
   let profilesCache = new Map(); // id -> profile
