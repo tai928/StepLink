@@ -16,8 +16,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ページ判定用（body に data-page="home" とか付けておくと便利）
   const pageType = document.body.dataset.page || "home";
 
-  // DOM のよく使う要素
-  const tweetsContainer = document.getElementById("tweetsContainer");
+  // 画面にある（右）という場所を、JavaScriptの中では（左）の名で操作
+  const tweetsContainer = document.getElementById("tweetsContainer");//投稿一覧
   const profileTweetsContainer = document.getElementById("profileTweetsContainer");
   const notificationsContainer = document.getElementById("notificationsContainer");
 
