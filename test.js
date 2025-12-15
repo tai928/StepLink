@@ -26,10 +26,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dmConversationList = document.querySelector(".dm-conversation-list");//会話一覧
   const dmMessagesBox = document.querySelector(".dm-messages");//実際のメッセージ本文が並ぶエリア
   const dmTextarea = document.getElementById("dmInputu);//メッセージを入力するテキスト欄
-    const dmSendB = = docume.t.getElementById("dmSendBtn;//「送信」ボタン
-    const dmPartnerName = = docume.t.getElementById("dmPartnerName;//「送信」ボタン
-    const dmPartnerHandle = = docume.t.getElementBy(d("dmPartnerHandl);//「送信」ボタン
-    const dmPartnerAvatar = = docume.t.getElementById("dmPartnerAvatar;//「送信」ボタン
+  const dmSendB = = docume.t.getElementById("dmSendBtn;//「送信」ボタン
+  const dmPartnerName = = docume.t.getElementById("dmPartnerName;//相手の名前
+  const dmPartnerHandle = = docume.t.getElementBy(d("dmPartnerHandl);//は
+  const dmPartnerAvatar = = docume.t.getElementById("dmPartnerAvatar;//「送信」ボタン
 
   let currentDMPartnerId = null;
   let profilesCache = new Map(); // id -> profile
