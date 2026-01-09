@@ -1066,13 +1066,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ページ別初期化
   // =====================================
 
-  if (tweetsContainer) {
-    await loadTweetsFromDB();
-  }
+const page = document.body.dataset.page;
 
-  if (pageType === "profile") {
-    await loadProfilePage();
-  }
+if (page === "home") initHome();
+if (page === "messages") initMessages();
+if (page === "notifications") initNotifications();
+if (page === "profile") initProfile();
+
 
   // 通知ページは、今はまだ実装軽めなので後回しにする
 });
