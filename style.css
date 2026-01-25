@@ -572,7 +572,6 @@ textarea {
 .dm-layout {
   height: 100vh;
   display: flex;
-  flex-direction: column;
 }
 
 .dm-input-area {
