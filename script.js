@@ -304,6 +304,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  const switchAccountBtnMobile = document.getElementById("switchAccountBtnMobile");
+if (switchAccountBtnMobile && accountModal) {
+  switchAccountBtnMobile.addEventListener("click", () => openModal(accountModal));
+}
+
   // =====================================
   // タイムライン（ホーム）
   // =====================================
