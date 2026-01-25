@@ -1289,9 +1289,8 @@ async function loadNotifications() {
         if (qUid) await openDMWithUser(qUid);
       }
     } else if (page === "notifications") {
-      if (notificationsContainer) {
-        notificationsContainer.innerHTML = "<p>通知は準備中🥺</p>";
-      }
+      await loadNotifications();
+    }
     }
   } catch (e) {
     console.error("page init error:", e);
