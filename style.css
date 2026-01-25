@@ -709,6 +709,40 @@ textarea {
 .dm-send-btn:active { 
    background: var(--green-press); 
 }
+
+/* DM入力エリア：送信ボタンが横に伸びないように強制修正 */
+.dm-input-area{
+  display:flex;
+  gap:8px;
+  align-items:flex-end;
+  padding:8px 10px;
+  border-top:1px solid var(--line);
+  background:#fff;
+}
+
+/* textareaはちゃんと幅を取る */
+.dm-input-area textarea,
+#dmInput{
+  flex: 1 1 auto;
+  min-width: 0;          /* ←これ超重要（潰れ防止） */
+  min-height: 64px;
+  max-height: 200px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* 送信ボタンは“中身サイズ”に固定（primary等のwidth:100%を殺す） */
+.dm-input-area button,
+#dmSendBtn,
+.dm-send-btn{
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 88px;
+  height: 44px;
+  white-space: nowrap;
+}
+
 /* ===========================
    ボトムナビ（スマホ）
 =========================== */
