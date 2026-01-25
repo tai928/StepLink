@@ -571,9 +571,11 @@ textarea {
 =========================== */
 .dm-layout {
   display: flex;
-  height: calc(100vh - 70px);
+  flex-direction: column;
+  height: 100%;
   background: #fafafa;
 }
+
 
 .dm-sidebar {
   width: 260px;
@@ -647,7 +649,9 @@ textarea {
   padding: 10px 14px;
   overflow-y: auto;
   background: #f7f7f7;
+  padding: 12px;
 }
+
 .dm-message {
   max-width: 70%;
   padding: 8px 10px;
@@ -684,12 +688,14 @@ textarea {
   flex: 1;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 6px 8px;
-  resize: none;
+  padding: 10px 12px;   /* 少し余裕 */
+  resize: vertical;     /* ← none から変更（縦だけ伸ばせる） */
   font-size: 14px;
-  min-height: 40px;
-  max-height: 96px;
+  line-height: 1.5;     /* ← 読みやすく */
+  min-height: 64px;     /* ← 40→64 で体感かなり改善 */
+  max-height: 200px;    /* ← 96→200 で窮屈さ消える */
 }
+
 
 /* 送信ボタン */
 .dm-send-btn {
