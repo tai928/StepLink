@@ -1071,34 +1071,37 @@ if (switchAccountBtnMobile && accountModal) {
   // ページ別初期化
   // =====================================
 
-const page = document.body.dataset.page;
+const page = document.body.dataset.page || "home";
 
-if (page === "home") initHome();
-if (page === "messages") initMessages();
-if (page === "notifications") initNotifications();
-if (page === "profile") initProfile();
-
-
-  // 通知ページは、今はまだ実装軽めなので後回しにする
-
-  const page = document.body.dataset.page || "home";
-
-try {
-  if (page === "home") await loadTweetsFromDB();
-  if (page === "messages") {
-    if (dmLayout && currentUser) {
-      await loadDMConversations();
-      const params = new URLSearchParams(location.search);
-      const qUid = params.get("uid");
-      if (qUid) await openDMWithUser(qUid);
+(async () => {
+  try {
+    if (page === "home") {
+      await loadTweetsFromDB();
     }
+
+    if (page === "messages") {
+      if (dmLayout && currentUser) {
+        await loadDMConversations();
+        const params = new URLSearchParams(location.search);
+        const qUid = params.get("uid");
+        if (qUid) await openDMWithUser(qUid);
+      }
+    }
+
+    if (page === "notifications") {
+      if (notificationsContainer) {
+        notificationsContainer.innerHTML = "<p>通知は準備中🥺</p>";
+      }
+    }
+
+    if (page === "profile") {
+      await loadProfilePage();
+    }
+  } catch (e) {
+    console.error("page init error:", e);
   }
-  if (page === "profile") await loadProfilePage();
-  if (page === "notifications") {
-    if (notificationsContainer) notificationsContainer.innerHTML = "<p>通知は準備中🥺</p>";
-  }
-} catch (e) {
-  console.error("INIT ERROR:", e);
+})();
+
 }
 
 });
