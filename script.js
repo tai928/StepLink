@@ -1266,35 +1266,33 @@ async function loadNotifications() {
       }
     }
   }
+// =====================================
+// ページ別初期化
+// =====================================
+const page = document.body.dataset.page || "home";
 
-  // =====================================
-  // ページ別初期化
-  // =====================================
-
-  // =====================================
-  // ページ別初期化
-  // =====================================
-  const page = document.body.dataset.page || "home";
-
+(async () => {
   try {
     if (page === "home") {
       await loadTweetsFromDB();
-    } else if (page === "profile") {
+    } 
+    else if (page === "profile") {
       await loadProfilePage();
-    } else if (page === "messages") {
+    } 
+    else if (page === "messages") {
       if (dmLayout && currentUser) {
         await loadDMConversations();
         const params = new URLSearchParams(location.search);
         const qUid = params.get("uid");
         if (qUid) await openDMWithUser(qUid);
       }
-    } else if (page === "notifications") {
+    } 
+    else if (page === "notifications") {
       await loadNotifications();
-    }
     }
   } catch (e) {
     console.error("page init error:", e);
   }
-
+})();
 
 });
