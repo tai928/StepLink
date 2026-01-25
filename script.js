@@ -7,13 +7,6 @@ const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
-
-  // ---- emergency stubs (temporary) ----
-async function initHome(){ try { await loadTweetsFromDB?.(); } catch(e){ console.error(e); } }
-async function initMessages(){}
-async function initNotifications(){}
-async function initProfile(){ try { await loadProfilePage?.(); } catch(e){ console.error(e); } }
-// -------------------------------------
   // ---------------------------------
   // 共通で使う状態
   // ---------------------------------
@@ -134,6 +127,39 @@ async function initProfile(){ try { await loadProfilePage?.(); } catch(e){ conso
     modal.classList.add("hidden");
   }
 
+  function escapeHTML(str) {
+    return String(str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  // 🔔 未読DMがあると通知ベルに●（notifDot を付けてる前提）
+  async function refreshUnreadDMIndicator() {
+    const dot = document.getElementById("notifDot");
+    if (!dot) return;
+
+    if (!currentUser) {
+      dot.classList.remove("show");
+      return;
+    }
+
+    const { count, error } = await supabaseClient
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("to_user_id", currentUser.id)
+      .eq("is_read", false);
+
+    if (error) {
+      console.warn("unread count error:", error);
+      return;
+    }
+
+    dot.classList.toggle("show", (count || 0) > 0);
+  }
+
   // =====================================
   // 認証状態のロード & UI反映
   // =====================================
@@ -188,7 +214,87 @@ async function initProfile(){ try { await loadProfilePage?.(); } catch(e){ conso
     if (profileAvatarEl) profileAvatarEl.textContent = avatar;
   }
 
-  await loadAuthState();
+  // =====================================
+  // Realtime: messages 既読同期
+  // =====================================
+  let rtChannel = null;
+
+  function subscribeMessagesRealtime() {
+    if (!currentUser) return;
+
+    rtChannel?.unsubscribe();
+
+    rtChannel = supabaseClient
+      .channel("rt-messages")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "messages" },
+        async (payload) => {
+          const row = payload.new || payload.old;
+
+          // DM画面で、開いてる相手とのスレッドに関係する更新なら再描画
+          if (
+            pageType === "messages" &&
+            currentDMPartnerId &&
+            row &&
+            (
+              (row.from_user_id === currentUser.id && row.to_user_id === currentDMPartnerId) ||
+              (row.from_user_id === currentDMPartnerId && row.to_user_id === currentUser.id)
+            )
+          ) {
+            await loadDMThread(currentDMPartnerId);
+            await loadDMConversations();
+          }
+
+          // 未読●更新
+          await refreshUnreadDMIndicator();
+        }
+      )
+      .subscribe();
+  }
+
+  // =====================================
+  // Presence: オンライン表示
+  // =====================================
+  let presenceChannel = null;
+  let onlineSet = new Set();
+
+  function setupPresence() {
+    if (!currentUser) return;
+
+    presenceChannel?.unsubscribe();
+
+    presenceChannel = supabaseClient.channel("presence-global", {
+      config: { presence: { key: currentUser.id } },
+    });
+
+    presenceChannel.on("presence", { event: "sync" }, () => {
+      onlineSet = new Set(Object.keys(presenceChannel.presenceState()));
+      updateOnlineUI();
+    });
+
+    presenceChannel.on("presence", { event: "join" }, ({ key }) => {
+      onlineSet.add(key);
+      updateOnlineUI();
+    });
+
+    presenceChannel.on("presence", { event: "leave" }, ({ key }) => {
+      onlineSet.delete(key);
+      updateOnlineUI();
+    });
+
+    presenceChannel.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        await presenceChannel.track({ at: new Date().toISOString() });
+      }
+    });
+  }
+
+  function updateOnlineUI() {
+    const badge = document.getElementById("dmOnlineBadge");
+    if (!badge || !currentDMPartnerId) return;
+    badge.textContent = onlineSet.has(currentDMPartnerId) ? "オンライン" : "オフライン";
+  }
 
   // =====================================
   // アカウントモーダル
@@ -312,9 +418,9 @@ async function initProfile(){ try { await loadProfilePage?.(); } catch(e){ conso
   }
 
   const switchAccountBtnMobile = document.getElementById("switchAccountBtnMobile");
-if (switchAccountBtnMobile && accountModal) {
-  switchAccountBtnMobile.addEventListener("click", () => openModal(accountModal));
-}
+  if (switchAccountBtnMobile && accountModal) {
+    switchAccountBtnMobile.addEventListener("click", () => openModal(accountModal));
+  }
 
   // =====================================
   // タイムライン（ホーム）
@@ -337,11 +443,11 @@ if (switchAccountBtnMobile && accountModal) {
       </div>
       <div class="post-body">
         <div class="post-header">
-          <span class="post-name" data-profile-uid="${row.user_id}">${name}</span>
-          <span class="post-handle" data-profile-uid="${row.user_id}">@${handle}</span>
+          <span class="post-name" data-profile-uid="${row.user_id}">${escapeHTML(name)}</span>
+          <span class="post-handle" data-profile-uid="${row.user_id}">@${escapeHTML(handle)}</span>
           <span class="post-time">${formatTime(row.created_at)}</span>
         </div>
-        <div class="post-text">${row.content || ""}</div>
+        <div class="post-text">${escapeHTML(row.content || "")}</div>
         <div class="post-footer">
           <button class="icon-btn reply-btn" data-tweet-id="${row.id}">返信</button>
           <button class="icon-btn like-btn" data-tweet-id="${row.id}">
@@ -374,11 +480,11 @@ if (switchAccountBtnMobile && accountModal) {
       </div>
       <div class="reply-body">
         <div class="reply-header">
-          <span class="reply-name" data-profile-uid="${replyRow.user_id}">${name}</span>
-          <span class="reply-handle" data-profile-uid="${replyRow.user_id}">@${handle}</span>
+          <span class="reply-name" data-profile-uid="${replyRow.user_id}">${escapeHTML(name)}</span>
+          <span class="reply-handle" data-profile-uid="${replyRow.user_id}">@${escapeHTML(handle)}</span>
           <span class="reply-time">${formatTime(replyRow.created_at)}</span>
         </div>
-        <div class="reply-text">${replyRow.content}</div>
+        <div class="reply-text">${escapeHTML(replyRow.content)}</div>
       </div>
     `;
 
@@ -540,7 +646,6 @@ if (switchAccountBtnMobile && accountModal) {
 
   function openReplyUI(tweetId) {
     replyingTweetId = tweetId;
-    // ★ ここでモーダルが用意されているか確認し、なければ prompt にフォールバック
     if (replyModal && replyTextarea && replyCharCounter) {
       replyTextarea.value = "";
       updateCounter(replyTextarea, replyCharCounter);
@@ -599,7 +704,6 @@ if (switchAccountBtnMobile && accountModal) {
       return;
     }
 
-    // 即時反映
     renderReply(data);
 
     if (replyModal) closeModal(replyModal);
@@ -700,7 +804,7 @@ if (switchAccountBtnMobile && accountModal) {
 
     const { data, error } = await supabaseClient
       .from("messages")
-      .select("id,from_user_id,to_user_id,content,created_at")
+      .select("id,from_user_id,to_user_id,content,created_at,is_read")
       .or(`from_user_id.eq.${currentUser.id},to_user_id.eq.${currentUser.id}`)
       .order("created_at", { ascending: false });
 
@@ -739,8 +843,8 @@ if (switchAccountBtnMobile && accountModal) {
           ${prof.avatar || "🧑‍💻"}
         </div>
         <div class="dm-conv-main">
-          <div class="dm-conv-name">${prof.name || "ユーザー"}</div>
-          <div class="dm-conv-last">${dm.content}</div>
+          <div class="dm-conv-name">${escapeHTML(prof.name || "ユーザー")}</div>
+          <div class="dm-conv-last">${escapeHTML(dm.content || "")}</div>
         </div>
         <div class="dm-conv-time">${formatTime(dm.created_at)}</div>
       `;
@@ -753,7 +857,7 @@ if (switchAccountBtnMobile && accountModal) {
 
     const { data, error } = await supabaseClient
       .from("messages")
-      .select("id,from_user_id,to_user_id,content,created_at")
+      .select("id,from_user_id,to_user_id,content,created_at,is_read,read_at")
       .or(
         `and(from_user_id.eq.${currentUser.id},to_user_id.eq.${partnerId}),and(from_user_id.eq.${partnerId},to_user_id.eq.${currentUser.id})`
       )
@@ -771,18 +875,27 @@ if (switchAccountBtnMobile && accountModal) {
         "dm-message " +
         (dm.from_user_id === currentUser.id ? "me" : "other");
       div.innerHTML = `
-        <div class="dm-message-text">${dm.content}</div>
+        <div class="dm-message-text">${escapeHTML(dm.content)}</div>
         <div class="dm-message-time">${formatTime(dm.created_at)}</div>
       `;
       dmMessagesBox.appendChild(div);
     });
 
     dmMessagesBox.scrollTop = dmMessagesBox.scrollHeight;
+
+    // ✅ スレッドを開いたら「相手→自分」の未読DMを既読にする（リアルタイム同期の起点）
+    await supabaseClient
+      .from("messages")
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq("from_user_id", partnerId)
+      .eq("to_user_id", currentUser.id)
+      .eq("is_read", false);
+
+    await refreshUnreadDMIndicator();
   }
 
   async function openDMWithUser(userId) {
     if (!currentUser || !dmLayout) {
-      // DM ページ以外なら messages.html に飛ばす
       window.location.href = `messages.html?uid=${encodeURIComponent(userId)}`;
       return;
     }
@@ -796,6 +909,7 @@ if (switchAccountBtnMobile && accountModal) {
       dmPartnerAvatarEl.textContent = prof.avatar || "🧑‍💻";
 
     await loadDMThread(userId);
+    updateOnlineUI();
   }
 
   async function sendDM() {
@@ -807,6 +921,8 @@ if (switchAccountBtnMobile && accountModal) {
       from_user_id: currentUser.id,
       to_user_id: currentDMPartnerId,
       content: text,
+      is_read: false,
+      read_at: null,
     });
 
     if (error) {
@@ -818,6 +934,7 @@ if (switchAccountBtnMobile && accountModal) {
     dmTextarea.value = "";
     await loadDMThread(currentDMPartnerId);
     await loadDMConversations();
+    await refreshUnreadDMIndicator();
   }
 
   if (dmSendBtn && dmTextarea) {
@@ -825,207 +942,196 @@ if (switchAccountBtnMobile && accountModal) {
   }
 
   if (dmTextarea) {
-  dmTextarea.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendDM();
-    }
-  });
-}
-
+    dmTextarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendDM();
+      }
+    });
+  }
 
   // =====================================
-// 通知
-// =====================================
-function escapeHTML(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function renderNotificationsEmpty(msg = "通知はまだないよ🥺") {
-  if (!notificationsContainer) return;
-  notificationsContainer.innerHTML = `
-    <div class="empty-state">
-      <p>${escapeHTML(msg)}</p>
-    </div>
-  `;
-}
-
-function renderNotificationItem(n, actorProfile) {
-  if (!notificationsContainer) return;
-
-  const actorName = actorProfile?.name || "ユーザー";
-  const actorHandle = actorProfile?.handle || "user";
-  const actorAvatar = actorProfile?.avatar || "🧑‍💻";
-
-  let icon = "🔔";
-  let title = "通知";
-  let body = "";
-  let actionHTML = "";
-
-  if (n.type === "like") {
-    icon = "❤️";
-    title = "いいね";
-    body = "あなたの投稿にいいねしました";
-    actionHTML = n.tweet_id
-      ? `<a class="notif-link" href="index.html?t=${encodeURIComponent(n.tweet_id)}">投稿を見る</a>`
-      : "";
-  } else if (n.type === "reply") {
-    icon = "💬";
-    title = "返信";
-    body = escapeHTML(n.content || "");
-    actionHTML = n.tweet_id
-      ? `<a class="notif-link" href="index.html?t=${encodeURIComponent(n.tweet_id)}">投稿を見る</a>`
-      : "";
-  } else if (n.type === "dm") {
-    icon = "✉️";
-    title = "メッセージ";
-    body = escapeHTML(n.content || "");
-    actionHTML = n.actor_id
-      ? `<a class="notif-link" href="messages.html?uid=${encodeURIComponent(n.actor_id)}">開く</a>`
-      : "";
+  // 通知
+  // =====================================
+  function renderNotificationsEmpty(msg = "通知はまだないよ🥺") {
+    if (!notificationsContainer) return;
+    notificationsContainer.innerHTML = `
+      <div class="empty-state">
+        <p>${escapeHTML(msg)}</p>
+      </div>
+    `;
   }
 
-  const div = document.createElement("article");
-  div.className = "post notif-item";
-  div.innerHTML = `
-    <div class="post-avatar" data-profile-uid="${escapeHTML(n.actor_id)}">${actorAvatar}</div>
-    <div class="post-body">
-      <div class="post-header">
-        <span class="post-name" data-profile-uid="${escapeHTML(n.actor_id)}">${escapeHTML(actorName)}</span>
-        <span class="post-handle" data-profile-uid="${escapeHTML(n.actor_id)}">@${escapeHTML(actorHandle)}</span>
-        <span class="post-time">${formatTime(n.created_at)}</span>
-      </div>
-      <div class="post-text">
-        <div style="display:flex; gap:8px; align-items:center;">
-          <span style="font-size:18px;">${icon}</span>
-          <strong>${title}</strong>
+  function renderNotificationItem(n, actorProfile) {
+    if (!notificationsContainer) return;
+
+    const actorName = actorProfile?.name || "ユーザー";
+    const actorHandle = actorProfile?.handle || "user";
+    const actorAvatar = actorProfile?.avatar || "🧑‍💻";
+
+    let icon = "🔔";
+    let title = "通知";
+    let body = "";
+    let actionHTML = "";
+
+    if (n.type === "like") {
+      icon = "❤️";
+      title = "いいね";
+      body = "あなたの投稿にいいねしました";
+      actionHTML = n.tweet_id
+        ? `<a class="notif-link" href="index.html?t=${encodeURIComponent(n.tweet_id)}">投稿を見る</a>`
+        : "";
+    } else if (n.type === "reply") {
+      icon = "💬";
+      title = "返信";
+      body = escapeHTML(n.content || "");
+      actionHTML = n.tweet_id
+        ? `<a class="notif-link" href="index.html?t=${encodeURIComponent(n.tweet_id)}">投稿を見る</a>`
+        : "";
+    } else if (n.type === "dm") {
+      icon = "✉️";
+      title = "メッセージ";
+      body = escapeHTML(n.content || "");
+      actionHTML = n.actor_id
+        ? `<a class="notif-link" href="messages.html?uid=${encodeURIComponent(n.actor_id)}">開く</a>`
+        : "";
+    }
+
+    const div = document.createElement("article");
+    div.className = "post notif-item";
+    div.innerHTML = `
+      <div class="post-avatar" data-profile-uid="${escapeHTML(n.actor_id)}">${actorAvatar}</div>
+      <div class="post-body">
+        <div class="post-header">
+          <span class="post-name" data-profile-uid="${escapeHTML(n.actor_id)}">${escapeHTML(actorName)}</span>
+          <span class="post-handle" data-profile-uid="${escapeHTML(n.actor_id)}">@${escapeHTML(actorHandle)}</span>
+          <span class="post-time">${formatTime(n.created_at)}</span>
         </div>
-        <div style="margin-top:6px;">${body}</div>
+        <div class="post-text">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span style="font-size:18px;">${icon}</span>
+            <strong>${title}</strong>
+          </div>
+          <div style="margin-top:6px;">${body}</div>
+        </div>
+        <div class="post-footer">
+          ${actionHTML}
+        </div>
       </div>
-      <div class="post-footer">
-        ${actionHTML}
-      </div>
-    </div>
-  `;
+    `;
 
-  notificationsContainer.appendChild(div);
-}
-
-async function loadNotifications() {
-  if (!notificationsContainer) return;
-
-  if (!currentUser) {
-    renderNotificationsEmpty("ログインすると通知が見れるよ🥺");
-    return;
+    notificationsContainer.appendChild(div);
   }
 
-  notificationsContainer.innerHTML = "";
+  async function loadNotifications() {
+    if (!notificationsContainer) return;
 
-  // ① 自分のツイートID一覧
-  const { data: myTweets, error: myTweetsErr } = await supabaseClient
-    .from("tweets")
-    .select("id")
-    .eq("user_id", currentUser.id);
+    if (!currentUser) {
+      renderNotificationsEmpty("ログインすると通知が見れるよ🥺");
+      return;
+    }
 
-  if (myTweetsErr) {
-    console.error("my tweets load error:", myTweetsErr);
-    renderNotificationsEmpty("通知の読み込みに失敗した…😭");
-    return;
-  }
+    notificationsContainer.innerHTML = "";
 
-  const myTweetIds = (myTweets || []).map((t) => t.id);
+    // ① 自分のツイートID一覧
+    const { data: myTweets, error: myTweetsErr } = await supabaseClient
+      .from("tweets")
+      .select("id")
+      .eq("user_id", currentUser.id);
 
-  // ② 返信（自分の投稿への返信）
-  let replyNotifs = [];
-  if (myTweetIds.length > 0) {
-    const { data: replies, error: repliesErr } = await supabaseClient
-      .from("tweet_replies")
-      .select("id,tweet_id,user_id,content,created_at")
-      .in("tweet_id", myTweetIds)
-      .neq("user_id", currentUser.id)
+    if (myTweetsErr) {
+      console.error("my tweets load error:", myTweetsErr);
+      renderNotificationsEmpty("通知の読み込みに失敗した…😭");
+      return;
+    }
+
+    const myTweetIds = (myTweets || []).map((t) => t.id);
+
+    // ② 返信（自分の投稿への返信）
+    let replyNotifs = [];
+    if (myTweetIds.length > 0) {
+      const { data: replies, error: repliesErr } = await supabaseClient
+        .from("tweet_replies")
+        .select("id,tweet_id,user_id,content,created_at")
+        .in("tweet_id", myTweetIds)
+        .neq("user_id", currentUser.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (repliesErr && repliesErr.code !== "42P01") {
+        console.error("notif replies load error:", repliesErr);
+      } else if (replies) {
+        replyNotifs = replies.map((r) => ({
+          type: "reply",
+          actor_id: r.user_id,
+          tweet_id: r.tweet_id,
+          content: r.content,
+          created_at: r.created_at,
+        }));
+      }
+    }
+
+    // ③ いいね（自分の投稿へのいいね）
+    let likeNotifs = [];
+    if (myTweetIds.length > 0) {
+      const { data: likes, error: likesErr } = await supabaseClient
+        .from("tweet_likes")
+        .select("tweet_id,user_id,created_at")
+        .in("tweet_id", myTweetIds)
+        .neq("user_id", currentUser.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (likesErr) {
+        console.warn("notif likes load warn:", likesErr);
+      } else if (likes) {
+        likeNotifs = likes.map((l) => ({
+          type: "like",
+          actor_id: l.user_id,
+          tweet_id: l.tweet_id,
+          created_at: l.created_at,
+        }));
+      }
+    }
+
+    // ④ DM（自分宛ての最新）
+    let dmNotifs = [];
+    const { data: dms, error: dmsErr } = await supabaseClient
+      .from("messages")
+      .select("id,from_user_id,to_user_id,content,created_at")
+      .eq("to_user_id", currentUser.id)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(30);
 
-    if (repliesErr && repliesErr.code !== "42P01") {
-      console.error("notif replies load error:", repliesErr);
-    } else if (replies) {
-      replyNotifs = replies.map((r) => ({
-        type: "reply",
-        actor_id: r.user_id,
-        tweet_id: r.tweet_id,
-        content: r.content,
-        created_at: r.created_at,
+    if (dmsErr && dmsErr.code !== "42P01") {
+      console.error("notif dm load error:", dmsErr);
+    } else if (dms) {
+      dmNotifs = dms.map((m) => ({
+        type: "dm",
+        actor_id: m.from_user_id,
+        content: m.content,
+        created_at: m.created_at,
       }));
     }
-  }
 
-  // ③ いいね（自分の投稿へのいいね）
-  // ※tweet_likes に created_at が無いと order できない。その場合は後述SQLで追加してね。
-  let likeNotifs = [];
-  if (myTweetIds.length > 0) {
-    const { data: likes, error: likesErr } = await supabaseClient
-      .from("tweet_likes")
-      .select("tweet_id,user_id,created_at")
-      .in("tweet_id", myTweetIds)
-      .neq("user_id", currentUser.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    // ⑤ まとめて新しい順にソート
+    const all = [...replyNotifs, ...likeNotifs, ...dmNotifs]
+      .filter((n) => n.created_at)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 60);
 
-    if (likesErr) {
-      console.warn("notif likes load warn:", likesErr);
-    } else if (likes) {
-      likeNotifs = likes.map((l) => ({
-        type: "like",
-        actor_id: l.user_id,
-        tweet_id: l.tweet_id,
-        created_at: l.created_at,
-      }));
+    if (all.length === 0) {
+      renderNotificationsEmpty("通知はまだないよ🥺");
+      return;
     }
+
+    // ⑥ 相手プロフィールをまとめて取得して描画
+    const actorIds = Array.from(new Set(all.map((n) => n.actor_id).filter(Boolean)));
+    const actorProfiles = await getProfilesByIds(actorIds);
+    const byId = new Map(actorProfiles.map((p) => [p.id, p]));
+
+    all.forEach((n) => renderNotificationItem(n, byId.get(n.actor_id)));
   }
-
-  // ④ DM（自分宛ての最新）
-  let dmNotifs = [];
-  const { data: dms, error: dmsErr } = await supabaseClient
-    .from("messages")
-    .select("id,from_user_id,to_user_id,content,created_at")
-    .eq("to_user_id", currentUser.id)
-    .order("created_at", { ascending: false })
-    .limit(30);
-
-  if (dmsErr && dmsErr.code !== "42P01") {
-    console.error("notif dm load error:", dmsErr);
-  } else if (dms) {
-    dmNotifs = dms.map((m) => ({
-      type: "dm",
-      actor_id: m.from_user_id,
-      content: m.content,
-      created_at: m.created_at,
-    }));
-  }
-
-  // ⑤ まとめて新しい順にソート
-  const all = [...replyNotifs, ...likeNotifs, ...dmNotifs]
-    .filter((n) => n.created_at)
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 60);
-
-  if (all.length === 0) {
-    renderNotificationsEmpty("通知はまだないよ🥺");
-    return;
-  }
-
-  // ⑥ 相手プロフィールをまとめて取得して描画
-  const actorIds = Array.from(new Set(all.map((n) => n.actor_id).filter(Boolean)));
-  const actorProfiles = await getProfilesByIds(actorIds);
-  const byId = new Map(actorProfiles.map((p) => [p.id, p]));
-
-  all.forEach((n) => renderNotificationItem(n, byId.get(n.actor_id)));
-}
 
   // =====================================
   // プロフィール編集
@@ -1100,9 +1206,6 @@ async function loadNotifications() {
     const uid = target.dataset.profileUid;
     if (!uid) return;
 
-    // ★ 修正ポイント：
-    // aタグなどの中にあっても通知ページに飛ばされないように、
-    // デフォルトのリンク遷移を止める
     e.preventDefault();
     e.stopPropagation();
 
@@ -1127,30 +1230,6 @@ async function loadNotifications() {
       return;
     }
   });
-
-  // =====================================
-  // DM一覧（messages.html を開いた時）
-  // =====================================
-  if (dmLayout && currentUser) {
-    await loadDMConversations();
-
-    // URL に ?uid=xxx があれば、その人との DM を開く
-    const params = new URLSearchParams(location.search);
-    const qUid = params.get("uid");
-    if (qUid) {
-      openDMWithUser(qUid);
-    }
-  }
-
-  if (dmConversationList) {
-    dmConversationList.addEventListener("click", (e) => {
-      const item = e.target.closest(".dm-conversation-item");
-      if (!item) return;
-      const pid = item.dataset.partnerUid;
-      if (!pid) return;
-      openDMWithUser(pid);
-    });
-  }
 
   // =====================================
   // プロフィールページで別ユーザーを表示
@@ -1205,7 +1284,7 @@ async function loadNotifications() {
       }
 
       profileTweetsContainer.innerHTML = "";
-      const ids = tweets.map((t) => t.id);
+      const ids = (tweets || []).map((t) => t.id);
 
       // いいね集計
       let likesByTweet = new Map();
@@ -1227,7 +1306,7 @@ async function loadNotifications() {
         }
       }
 
-      tweets.forEach((t) => {
+      (tweets || []).forEach((t) => {
         const article = document.createElement("article");
         article.className = "post";
         article.dataset.tweetId = t.id;
@@ -1243,11 +1322,11 @@ async function loadNotifications() {
           </div>
           <div class="post-body">
             <div class="post-header">
-              <span class="post-name" data-profile-uid="${t.user_id}">${name}</span>
-              <span class="post-handle" data-profile-uid="${t.user_id}">@${handle}</span>
+              <span class="post-name" data-profile-uid="${t.user_id}">${escapeHTML(name)}</span>
+              <span class="post-handle" data-profile-uid="${t.user_id}">@${escapeHTML(handle)}</span>
               <span class="post-time">${formatTime(t.created_at)}</span>
             </div>
-            <div class="post-text">${t.content || ""}</div>
+            <div class="post-text">${escapeHTML(t.content || "")}</div>
             <div class="post-footer">
               <button class="icon-btn reply-btn" data-tweet-id="${t.id}">返信</button>
               <button class="icon-btn like-btn" data-tweet-id="${t.id}">
@@ -1276,30 +1355,47 @@ async function loadNotifications() {
       }
     }
   }
+
   // =====================================
   // ページ別初期化
   // =====================================
-  const page = document.body.dataset.page || "home";
 
-  (async () => {
-    try {
-      if (page === "home") {
-        await loadTweetsFromDB();
-      } else if (page === "profile") {
-        await loadProfilePage();
-      } else if (page === "messages") {
-        if (dmLayout && currentUser) {
-          await loadDMConversations();
-          const params = new URLSearchParams(location.search);
-          const qUid = params.get("uid");
-          if (qUid) await openDMWithUser(qUid);
-        }
-      } else if (page === "notifications") {
-        await loadNotifications();
+  // 1) 認証読み込み
+  await loadAuthState();
+
+  // 2) リアルタイム＆未読＆Presence（ログインしてる時だけ動く）
+  subscribeMessagesRealtime();
+  setupPresence();
+  await refreshUnreadDMIndicator();
+
+  // 3) ページごとの読み込み
+  try {
+    if (pageType === "home") {
+      await loadTweetsFromDB();
+    } else if (pageType === "profile") {
+      await loadProfilePage();
+    } else if (pageType === "messages") {
+      if (dmLayout && currentUser) {
+        await loadDMConversations();
+        const params = new URLSearchParams(location.search);
+        const qUid = params.get("uid");
+        if (qUid) await openDMWithUser(qUid);
       }
-    } catch (e) {
-      console.error("page init error:", e);
+    } else if (pageType === "notifications") {
+      await loadNotifications();
     }
-  })();
-});
+  } catch (e) {
+    console.error("page init error:", e);
+  }
 
+  // DM一覧クリック
+  if (dmConversationList) {
+    dmConversationList.addEventListener("click", (e) => {
+      const item = e.target.closest(".dm-conversation-item");
+      if (!item) return;
+      const pid = item.dataset.partnerUid;
+      if (!pid) return;
+      openDMWithUser(pid);
+    });
+  }
+});
