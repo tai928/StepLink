@@ -824,6 +824,16 @@ if (switchAccountBtnMobile && accountModal) {
     dmSendBtn.addEventListener("click", sendDM);
   }
 
+  if (dmTextarea) {
+  dmTextarea.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendDM();
+    }
+  });
+}
+
+
   // =====================================
 // 通知
 // =====================================
