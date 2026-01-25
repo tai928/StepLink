@@ -1293,6 +1293,4 @@ const page = document.body.dataset.page || "home";
   } catch (e) {
     console.error("page init error:", e);
   }
-})();
-
 });
