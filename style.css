@@ -693,9 +693,9 @@ textarea {
 } 
 /* 送信ボタン */ 
 .dm-send-btn { 
-   flex: 0 0 auto; 
+   flex: 0 0 20; 
    padding: 8px 14px; 
-   border-radius: 999px; 
+   border-radius: 100px; 
    border: none; 
    background: var(--green-main); 
    color: #fff; 
