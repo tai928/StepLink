@@ -570,9 +570,16 @@ textarea {
    DMレイアウト
 =========================== */
 .dm-layout {
+  height: 100vh;
   display: flex;
-  height: 100%;
-  background: #fafafa;
+  flex-direction: column;
+}
+
+.dm-input-area {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  border-top: 1px solid var(--line);
 }
 
 
