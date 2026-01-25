@@ -1,27 +1,17 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <title>StepLink</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
+<body data-page="profile">
   <div class="app">
-    <!-- 左サイドバー（PC） -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
 
-    <nav class="nav">
-      <a href="index.html" class="nav-item">ホーム</a>
-      <a href="messages.html" class="nav-item">メッセージ</a>
-      <a href="notifications.html" class="nav-item">通知</a>
-      <a href="profile.html" class="nav-item">プロフィール</a>
-    </nav>
-    
+      <nav class="nav">
+        <a href="index.html" class="nav-item">ホーム</a>
+        <a href="messages.html" class="nav-item">メッセージ</a>
+        <a href="notifications.html" class="nav-item">通知</a>
+        <a href="profile.html" class="nav-item">プロフィール</a>
+      </nav>
 
-　
+      <button class="post-button" id="openModalBtn">投稿する</button>
+
       <div class="account-summary">
         <div class="account-main">
           <div class="account-avatar" id="currentUserAvatar">🧑‍💻</div>
@@ -35,19 +25,69 @@
       </div>
     </aside>
 
-    <!-- 通知タイムライン -->
     <main class="timeline">
       <header class="timeline-header">
-        <h1>通知</h1>
+        <h1>プロフィール</h1>
       </header>
 
-      <section id="notificationsContainer" class="posts">
-        <!-- JSが埋める -->
-      </section>
+      <div class="profile-banner"></div>
+
+      <div class="profile-top">
+        <div class="profile-avatar-wrapper">
+          <div class="profile-avatar" id="profileAvatar">🧑‍💻</div>
+        </div>
+
+        <div class="profile-top-buttons">
+          <button id="dmFromProfileBtn" class="profile-icon-btn">💬 メッセージ</button>
+          <button id="editProfileBtn" class="edit-profile-btn">プロフィールを編集</button>
+        </div>
+      </div>
+
+      <div class="profile-info">
+        <div class="profile-name" id="profileName">ユーザー</div>
+        <div class="profile-handle" id="profileHandle">@user</div>
+        <div class="profile-bio" id="profileBio">Bioが未設定です</div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="profile-tab active">ツイート</div>
+      </div>
+
+      <section id="profileTweetsContainer" class="posts"></section>
     </main>
   </div>
 
-  <!-- アカウントモーダル -->
+  <!-- プロフィール編集モーダル（★IDをscript.jsに合わせる） -->
+  <div id="editProfileModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <button id="closeEditProfileModalBtn" class="icon-btn">✕</button>
+      </header>
+
+      <div class="modal-body edit-profile-body">
+        <label>名前
+          <input id="editProfileName" type="text" />
+        </label>
+
+        <label>ハンドル（@なし）
+          <input id="editProfileHandle" type="text" />
+        </label>
+
+        <label>アイコン絵文字
+          <input id="editProfileAvatar" type="text" placeholder="🎣" />
+        </label>
+
+        <label>自己紹介（bio）
+          <textarea id="editProfileBio" rows="4"></textarea>
+        </label>
+
+        <button id="editProfileSaveBtn" class="primary">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- アカウントモーダル（共通） -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -89,10 +129,10 @@
     <a href="messages.html" class="bottom-nav-item">
       <span class="icon">💬</span><span>メッセージ</span>
     </a>
-    <a href="notifications.html" class="bottom-nav-item active">
+    <a href="notifications.html" class="bottom-nav-item">
       <span class="icon">🔔</span><span>通知</span>
     </a>
-    <a href="profile.html" class="bottom-nav-item">
+    <a href="profile.html" class="bottom-nav-item active">
       <span class="icon">👤</span><span>プロフィール</span>
     </a>
     <button type="button" class="bottom-nav-item" id="switchAccountBtnMobile">
@@ -100,6 +140,6 @@
     </button>
   </nav>
 
+
   <script src="script.js"></script>
 </body>
-</html>
