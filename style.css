@@ -675,47 +675,41 @@ textarea {
   text-align: right;
 }
 
-/* 入力エリア（比率調整済み） */
-.dm-input-area {
-  display: flex;
-  padding: 8px 10px;
-  border-top: 1px solid var(--line);
-  background: #fff;
-  gap: 8px;
-  align-items: flex-end;
+/* 入力エリア（比率調整済み） */ 
+.dm-input-area { 
+   display: flex; 
+   padding: 8px 10px; 
+   border-top: 1px solid var(--line); background: 
+      #fff; gap: 8px; align-items: flex-end; 
+} 
+.dm-input-area textarea { 
+   flex: 1; 
+   border: 1px solid var(--line); 
+   border-radius: 10px; 
+   padding: 6px 8px; 
+   resize: none; 
+   font-size: 14px; 
+   min-height: 40px; 
+   max-height: 96px; 
+} 
+/* 送信ボタン */ 
+.dm-send-btn { 
+   flex: 0 0 auto; 
+   padding: 8px 14px; 
+   border-radius: 999px; 
+   border: none; 
+   background: var(--green-main); 
+   color: #fff; 
+   font-size: 14px; 
+   cursor: pointer; 
+   transition: 0.15s; 
+} 
+.dm-send-btn:hover { 
+   background: var(--green-hover); 
+} 
+.dm-send-btn:active { 
+   background: var(--green-press); 
 }
-.dm-input-area textarea {
-  flex: 1;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;   /* 少し余裕 */
-  resize: vertical;     /* ← none から変更（縦だけ伸ばせる） */
-  font-size: 14px;
-  line-height: 1.5;     /* ← 読みやすく */
-  min-height: 64px;     /* ← 40→64 で体感かなり改善 */
-  max-height: 200px;    /* ← 96→200 で窮屈さ消える */
-}
-
-
-/* 送信ボタン */
-.dm-send-btn {
-  flex: 0 0 auto;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: none;
-  background: var(--green-main);
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-.dm-send-btn:hover {
-  background: var(--green-hover);
-}
-.dm-send-btn:active {
-  background: var(--green-press);
-}
-
 /* ===========================
    ボトムナビ（スマホ）
 =========================== */
