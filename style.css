@@ -871,6 +871,14 @@ body[data-page="messages"] #dmSendBtn{
   flex: 0 0 auto !important;
   min-width: 92px;
 }
+/* ===========================
+   DMページだけ body を完全固定
+=========================== */
+body[data-page="messages"] {
+  position: fixed;
+  inset: 0;              /* top/bottom/left/right 全部0 */
+  overflow: hidden;      /* bodyは絶対にスクロールさせない */
+}
 
 /* ===========================
    レスポンシブ
