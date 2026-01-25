@@ -13,6 +13,12 @@ body {
   font-family: "Helvetica Neue", Arial, sans-serif;
   background: #f4f4f4;
   color: #222;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
 }
 
 /* 色定義（緑テーマ） */
