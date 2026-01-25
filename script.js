@@ -1080,4 +1080,25 @@ if (page === "profile") initProfile();
 
 
   // 通知ページは、今はまだ実装軽めなので後回しにする
+
+  const page = document.body.dataset.page || "home";
+
+try {
+  if (page === "home") await loadTweetsFromDB();
+  if (page === "messages") {
+    if (dmLayout && currentUser) {
+      await loadDMConversations();
+      const params = new URLSearchParams(location.search);
+      const qUid = params.get("uid");
+      if (qUid) await openDMWithUser(qUid);
+    }
+  }
+  if (page === "profile") await loadProfilePage();
+  if (page === "notifications") {
+    if (notificationsContainer) notificationsContainer.innerHTML = "<p>通知は準備中🥺</p>";
+  }
+} catch (e) {
+  console.error("INIT ERROR:", e);
+}
+
 });
