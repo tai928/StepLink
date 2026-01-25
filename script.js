@@ -825,6 +825,199 @@ if (switchAccountBtnMobile && accountModal) {
   }
 
   // =====================================
+// 通知
+// =====================================
+function escapeHTML(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderNotificationsEmpty(msg = "通知はまだないよ🥺") {
+  if (!notificationsContainer) return;
+  notificationsContainer.innerHTML = `
+    <div class="empty-state">
+      <p>${escapeHTML(msg)}</p>
+    </div>
+  `;
+}
+
+function renderNotificationItem(n, actorProfile) {
+  if (!notificationsContainer) return;
+
+  const actorName = actorProfile?.name || "ユーザー";
+  const actorHandle = actorProfile?.handle || "user";
+  const actorAvatar = actorProfile?.avatar || "🧑‍💻";
+
+  let icon = "🔔";
+  let title = "通知";
+  let body = "";
+  let actionHTML = "";
+
+  if (n.type === "like") {
+    icon = "❤️";
+    title = "いいね";
+    body = "あなたの投稿にいいねしました";
+    actionHTML = n.tweet_id
+      ? `<a class="notif-link" href="index.html?t=${encodeURIComponent(n.tweet_id)}">投稿を見る</a>`
+      : "";
+  } else if (n.type === "reply") {
+    icon = "💬";
+    title = "返信";
+    body = escapeHTML(n.content || "");
+    actionHTML = n.tweet_id
+      ? `<a class="notif-link" href="index.html?t=${encodeURIComponent(n.tweet_id)}">投稿を見る</a>`
+      : "";
+  } else if (n.type === "dm") {
+    icon = "✉️";
+    title = "メッセージ";
+    body = escapeHTML(n.content || "");
+    actionHTML = n.actor_id
+      ? `<a class="notif-link" href="messages.html?uid=${encodeURIComponent(n.actor_id)}">開く</a>`
+      : "";
+  }
+
+  const div = document.createElement("article");
+  div.className = "post notif-item";
+  div.innerHTML = `
+    <div class="post-avatar" data-profile-uid="${escapeHTML(n.actor_id)}">${actorAvatar}</div>
+    <div class="post-body">
+      <div class="post-header">
+        <span class="post-name" data-profile-uid="${escapeHTML(n.actor_id)}">${escapeHTML(actorName)}</span>
+        <span class="post-handle" data-profile-uid="${escapeHTML(n.actor_id)}">@${escapeHTML(actorHandle)}</span>
+        <span class="post-time">${formatTime(n.created_at)}</span>
+      </div>
+      <div class="post-text">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span style="font-size:18px;">${icon}</span>
+          <strong>${title}</strong>
+        </div>
+        <div style="margin-top:6px;">${body}</div>
+      </div>
+      <div class="post-footer">
+        ${actionHTML}
+      </div>
+    </div>
+  `;
+
+  notificationsContainer.appendChild(div);
+}
+
+async function loadNotifications() {
+  if (!notificationsContainer) return;
+
+  if (!currentUser) {
+    renderNotificationsEmpty("ログインすると通知が見れるよ🥺");
+    return;
+  }
+
+  notificationsContainer.innerHTML = "";
+
+  // ① 自分のツイートID一覧
+  const { data: myTweets, error: myTweetsErr } = await supabaseClient
+    .from("tweets")
+    .select("id")
+    .eq("user_id", currentUser.id);
+
+  if (myTweetsErr) {
+    console.error("my tweets load error:", myTweetsErr);
+    renderNotificationsEmpty("通知の読み込みに失敗した…😭");
+    return;
+  }
+
+  const myTweetIds = (myTweets || []).map((t) => t.id);
+
+  // ② 返信（自分の投稿への返信）
+  let replyNotifs = [];
+  if (myTweetIds.length > 0) {
+    const { data: replies, error: repliesErr } = await supabaseClient
+      .from("tweet_replies")
+      .select("id,tweet_id,user_id,content,created_at")
+      .in("tweet_id", myTweetIds)
+      .neq("user_id", currentUser.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (repliesErr && repliesErr.code !== "42P01") {
+      console.error("notif replies load error:", repliesErr);
+    } else if (replies) {
+      replyNotifs = replies.map((r) => ({
+        type: "reply",
+        actor_id: r.user_id,
+        tweet_id: r.tweet_id,
+        content: r.content,
+        created_at: r.created_at,
+      }));
+    }
+  }
+
+  // ③ いいね（自分の投稿へのいいね）
+  // ※tweet_likes に created_at が無いと order できない。その場合は後述SQLで追加してね。
+  let likeNotifs = [];
+  if (myTweetIds.length > 0) {
+    const { data: likes, error: likesErr } = await supabaseClient
+      .from("tweet_likes")
+      .select("tweet_id,user_id,created_at")
+      .in("tweet_id", myTweetIds)
+      .neq("user_id", currentUser.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (likesErr) {
+      console.warn("notif likes load warn:", likesErr);
+    } else if (likes) {
+      likeNotifs = likes.map((l) => ({
+        type: "like",
+        actor_id: l.user_id,
+        tweet_id: l.tweet_id,
+        created_at: l.created_at,
+      }));
+    }
+  }
+
+  // ④ DM（自分宛ての最新）
+  let dmNotifs = [];
+  const { data: dms, error: dmsErr } = await supabaseClient
+    .from("messages")
+    .select("id,from_user_id,to_user_id,content,created_at")
+    .eq("to_user_id", currentUser.id)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (dmsErr && dmsErr.code !== "42P01") {
+    console.error("notif dm load error:", dmsErr);
+  } else if (dms) {
+    dmNotifs = dms.map((m) => ({
+      type: "dm",
+      actor_id: m.from_user_id,
+      content: m.content,
+      created_at: m.created_at,
+    }));
+  }
+
+  // ⑤ まとめて新しい順にソート
+  const all = [...replyNotifs, ...likeNotifs, ...dmNotifs]
+    .filter((n) => n.created_at)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 60);
+
+  if (all.length === 0) {
+    renderNotificationsEmpty("通知はまだないよ🥺");
+    return;
+  }
+
+  // ⑥ 相手プロフィールをまとめて取得して描画
+  const actorIds = Array.from(new Set(all.map((n) => n.actor_id).filter(Boolean)));
+  const actorProfiles = await getProfilesByIds(actorIds);
+  const byId = new Map(actorProfiles.map((p) => [p.id, p]));
+
+  all.forEach((n) => renderNotificationItem(n, byId.get(n.actor_id)));
+}
+
+  // =====================================
   // プロフィール編集
   // =====================================
 
