@@ -1078,37 +1078,31 @@ if (switchAccountBtnMobile && accountModal) {
   // ページ別初期化
   // =====================================
 
-const page = document.body.dataset.page || "home";
+  // =====================================
+  // ページ別初期化
+  // =====================================
+  const page = document.body.dataset.page || "home";
 
-(async () => {
   try {
     if (page === "home") {
       await loadTweetsFromDB();
-    }
-
-    if (page === "messages") {
+    } else if (page === "profile") {
+      await loadProfilePage();
+    } else if (page === "messages") {
       if (dmLayout && currentUser) {
         await loadDMConversations();
         const params = new URLSearchParams(location.search);
         const qUid = params.get("uid");
         if (qUid) await openDMWithUser(qUid);
       }
-    }
-
-    if (page === "notifications") {
+    } else if (page === "notifications") {
       if (notificationsContainer) {
         notificationsContainer.innerHTML = "<p>通知は準備中🥺</p>";
       }
     }
-
-    if (page === "profile") {
-      await loadProfilePage();
-    }
   } catch (e) {
     console.error("page init error:", e);
   }
-})();
 
-}
 
 });
