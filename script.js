@@ -7,6 +7,13 @@ const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+  // ---- emergency stubs (temporary) ----
+async function initHome(){ try { await loadTweetsFromDB?.(); } catch(e){ console.error(e); } }
+async function initMessages(){}
+async function initNotifications(){}
+async function initProfile(){ try { await loadProfilePage?.(); } catch(e){ console.error(e); } }
+// -------------------------------------
   // ---------------------------------
   // 共通で使う状態
   // ---------------------------------
