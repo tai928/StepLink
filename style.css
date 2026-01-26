@@ -884,24 +884,26 @@ body[data-page="messages"] {
 =========================== */
 .notif-wrap{
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 .notif-dot{
   position: absolute;
-  top: -2px;
-  right: -6px;
+  top: -4px;
+  right: -8px;
   width: 9px;
   height: 9px;
   border-radius: 999px;
-  background: #ff3b30; /* 赤 */
+  background: #ff3b30;
   display: none;
-  border: 2px solid #fff; /* 白フチ（背景が白想定） */
+  border: 2px solid #fff;
 }
 
 .notif-dot.show{
   display: block;
 }
+
 
 /* ===========================
    レスポンシブ
