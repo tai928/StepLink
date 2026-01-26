@@ -15,7 +15,13 @@
       <nav class="nav">
         <a href="index.html" class="nav-item">ホーム</a>
         <a href="messages.html" class="nav-item">メッセージ</a>
-        <a href="notifications.html" class="nav-item">通知</a>
+        <a href="notifications.html" class="nav-item notif-nav">
+        <span class="notif-wrap">
+          🔔
+          <span class="notif-dot" data-notif-dot></span>
+        </span>
+        通知
+        </a>
         <a href="profile.html" class="nav-item">プロフィール</a>
       </nav>
 
@@ -130,28 +136,29 @@
     </div>
   </div>
 
-  <!-- ボトムナビ -->
+    <!-- ボトムナビ（スマホ） -->
   <nav class="bottom-nav">
-    <a href="index.html" class="bottom-nav-item">
+    <a href="index.html" class="bottom-nav-item active">
       <span class="icon">🏠</span><span>ホーム</span>
     </a>
     <a href="messages.html" class="bottom-nav-item">
       <span class="icon">💬</span><span>メッセージ</span>
     </a>
-    <a href="notifications.html" class="bottom-nav-item" id="notifNav">
+    <a href="notifications.html" class="bottom-nav-item">
       <span class="icon notif-wrap">
         🔔
-        <span id="notifDot" class="notif-dot"></span>
+        <span class="notif-dot" data-notif-dot></span>
       </span>
       <span>通知</span>
     </a>
-    <a href="profile.html" class="bottom-nav-item active">
+    <a href="profile.html" class="bottom-nav-item">
       <span class="icon">👤</span><span>プロフィール</span>
     </a>
     <button type="button" class="bottom-nav-item" id="switchAccountBtnMobile">
       <span class="icon">🔑</span><span>アカウント</span>
     </button>
   </nav>
+
 
 
   <script src="script.js"></script>
