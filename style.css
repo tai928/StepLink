@@ -879,6 +879,29 @@ body[data-page="messages"] {
   inset: 0;              /* top/bottom/left/right 全部0 */
   overflow: hidden;      /* bodyは絶対にスクロールさせない */
 }
+/* ===========================
+   通知ドット
+=========================== */
+.notif-wrap{
+  position: relative;
+  display: inline-block;
+}
+
+.notif-dot{
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #ff3b30; /* 赤 */
+  display: none;
+  border: 2px solid #fff; /* 白フチ（背景が白想定） */
+}
+
+.notif-dot.show{
+  display: block;
+}
 
 /* ===========================
    レスポンシブ
