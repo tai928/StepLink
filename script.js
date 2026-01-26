@@ -15,12 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentDMPartnerId = null;
   const profilesCache = new Map(); // id -> profile
+
   let rtChannel = null;
   let presenceChannel = null;
   let onlineSet = new Set();
 
   // =====================================
-  // DOM取得ヘルパ
+  // DOM helpers
   // =====================================
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -28,10 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 共通
   const tweetsContainer =
-  byId("tweetsContainer") ||
-  byId("timelinePosts") ||
-  byId("postsContainer") ||
-  (page === "home" ? document.querySelector("main.timeline .posts") : null);
+    byId("tweetsContainer") ||
+    byId("timelinePosts") ||
+    byId("postsContainer") ||
+    (page === "home" ? document.querySelector("main.timeline .posts") : null);
+
   const profileTweetsContainer = byId("profileTweetsContainer");
   const notificationsContainer = byId("notificationsContainer");
 
@@ -85,30 +87,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // プロフィール
   const profileNameEl = byId("profileName");
   const profileHandleEl = byId("profileHandle");
-  const profileBioEl = $("#profileBio") || $(".profile-bio");
+  const profileBioEl = byId("profileBio") || $(".profile-bio");
   const profileAvatarEl = byId("profileAvatar") || $(".profile-avatar");
   const editProfileBtn = byId("editProfileBtn");
   const dmFromProfileBtn = byId("dmFromProfileBtn");
 
-  // プロフィール編集（任意 / idがページで違うことがあるので両対応）
+  // プロフィール編集（IDがページで違うことがあるので両対応）
   const editProfileModal = byId("editProfileModal");
   const closeEditProfileModalBtn =
     byId("closeEditProfileModalBtn") || byId("closeEditProfileModal");
-  const editProfileNameInput =
-    byId("editProfileName") || byId("editNameInput");
+  const editProfileNameInput = byId("editProfileName") || byId("editNameInput");
   const editProfileHandleInput =
     byId("editProfileHandle") || byId("editHandleInput");
   const editProfileAvatarInput =
     byId("editProfileAvatar") || byId("editAvatarInput");
-  const editProfileBioTextarea =
-    byId("editProfileBio") || byId("editBioInput");
-  const editProfileSaveBtn =
-    byId("editProfileSaveBtn") || byId("saveProfileBtn");
+  const editProfileBioTextarea = byId("editProfileBio") || byId("editBioInput");
+  const editProfileSaveBtn = byId("editProfileSaveBtn") || byId("saveProfileBtn");
 
   // DM
   const dmLayout = $(".dm-layout");
-  const dmConversationList =
-    $(".dm-conversation-list") || byId("dmConversations");
+  const dmConversationList = $(".dm-conversation-list") || byId("dmConversations");
   const dmMessagesBox = $(".dm-messages") || byId("dmMessages");
   const dmTextarea = byId("dmInput");
   const dmSendBtn = byId("dmSendBtn");
@@ -162,13 +160,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const bio = profile?.bio || "プロフィールはまだ書かれていません";
 
     if (currentUserNameEl) currentUserNameEl.textContent = name;
-    if (currentUserHandleEl)
-      currentUserHandleEl.textContent = user ? "@" + handle : "";
+    if (currentUserHandleEl) currentUserHandleEl.textContent = user ? "@" + handle : "";
     if (currentUserAvatarEl) currentUserAvatarEl.textContent = avatar;
 
     if (profileNameEl) profileNameEl.textContent = name;
-    if (profileHandleEl)
-      profileHandleEl.textContent = user ? "@" + handle : "@user";
+    if (profileHandleEl) profileHandleEl.textContent = user ? "@" + handle : "@user";
     if (profileBioEl) profileBioEl.textContent = bio;
     if (profileAvatarEl) profileAvatarEl.textContent = avatar;
   }
@@ -228,8 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function handleRegister() {
-    if (!regNameInput || !regHandleInput || !regEmailInput || !regPasswordInput)
-      return;
+    if (!regNameInput || !regHandleInput || !regEmailInput || !regPasswordInput) return;
 
     const name = regNameInput.value.trim();
     const handle = regHandleInput.value.trim();
@@ -289,11 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (loginError) loginError.textContent = "";
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) {
       console.error("signIn error:", error);
       if (loginError) loginError.textContent = error.message;
@@ -365,14 +356,11 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="replies" data-tweet-id="${row.id}"></div>
       </div>
     `;
-
     tweetsContainer.appendChild(article);
   }
 
   function renderReply(replyRow) {
-    const repliesBox = document.querySelector(
-      `.replies[data-tweet-id="${replyRow.tweet_id}"]`
-    );
+    const repliesBox = document.querySelector(`.replies[data-tweet-id="${replyRow.tweet_id}"]`);
     if (!repliesBox) return;
 
     const div = document.createElement("div");
@@ -417,6 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // likes
     const likesByTweet = new Map();
     const likedByMeSet = new Set();
+
     if (tweetIds.length > 0) {
       const { data: likes, error: likesErr } = await supabaseClient
         .from("tweet_likes")
@@ -428,9 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const arr = likesByTweet.get(l.tweet_id) || [];
           arr.push(l.user_id);
           likesByTweet.set(l.tweet_id, arr);
-          if (currentUser && l.user_id === currentUser.id) {
-            likedByMeSet.add(l.tweet_id);
-          }
+          if (currentUser && l.user_id === currentUser.id) likedByMeSet.add(l.tweet_id);
         }
       }
     }
@@ -467,12 +454,10 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("ログインしてから投稿してね🥺");
       return;
     }
-    const name =
-      currentProfile?.name || currentUser.user_metadata?.name || "ユーザー";
-    const handle =
-      currentProfile?.handle || currentUser.user_metadata?.handle || "user";
-    const avatar =
-      currentProfile?.avatar || currentUser.user_metadata?.avatar || "🧑‍💻";
+
+    const name = currentProfile?.name || currentUser.user_metadata?.name || "ユーザー";
+    const handle = currentProfile?.handle || currentUser.user_metadata?.handle || "user";
+    const avatar = currentProfile?.avatar || currentUser.user_metadata?.avatar || "🧑‍💻";
 
     const { error } = await supabaseClient.from("tweets").insert({
       user_id: currentUser.id,
@@ -505,14 +490,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (preview) preview.innerHTML = "";
   }
 
-  // ✅ 投稿削除（A）
+  // ✅ 投稿削除
   async function deleteTweet(tweetId) {
     if (!currentUser) return;
 
     const ok = confirm("この投稿を削除する？（元に戻せない）");
     if (!ok) return;
 
-    // 関連（外部キーCASCADEが無い場合の保険）
+    // 外部キーCASCADEが無い場合の保険
     await supabaseClient.from("tweet_likes").delete().eq("tweet_id", tweetId);
     await supabaseClient.from("tweet_replies").delete().eq("tweet_id", tweetId);
 
@@ -528,7 +513,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // UI更新
     if (page === "home") await loadTweetsFromDB();
     if (page === "profile") await loadProfilePage();
   }
@@ -562,12 +546,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const name =
-      currentProfile?.name || currentUser.user_metadata?.name || "ユーザー";
-    const handle =
-      currentProfile?.handle || currentUser.user_metadata?.handle || "user";
-    const avatar =
-      currentProfile?.avatar || currentUser.user_metadata?.avatar || "🧑‍💻";
+    const name = currentProfile?.name || currentUser.user_metadata?.name || "ユーザー";
+    const handle = currentProfile?.handle || currentUser.user_metadata?.handle || "user";
+    const avatar = currentProfile?.avatar || currentUser.user_metadata?.avatar || "🧑‍💻";
 
     const { data, error } = await supabaseClient
       .from("tweet_replies")
@@ -619,6 +600,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("like insert error:", error);
         return;
       }
+
       if (iconSpan) iconSpan.textContent = "♥";
       if (countSpan) {
         const n = parseInt(countSpan.textContent || "0", 10);
@@ -635,12 +617,36 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("like delete error:", error);
         return;
       }
+
       if (iconSpan) iconSpan.textContent = "♡";
       if (countSpan) {
         const n = parseInt(countSpan.textContent || "0", 10);
         countSpan.textContent = String(Math.max(0, n - 1));
       }
     }
+  }
+
+  // =====================================
+  // DM 既読（重要）
+  // =====================================
+  async function markThreadAsRead(partnerId) {
+    if (!currentUser || !partnerId) return;
+
+    // 自分が受け取った(相手→自分) 未読だけ既読化
+    const { error } = await supabaseClient
+      .from("messages")
+      .update({ is_read: true })
+      .eq("to_user_id", currentUser.id)
+      .eq("from_user_id", partnerId)
+      .eq("is_read", false);
+
+    if (error) {
+      // RLSでupdate許可してないとここで死ぬ
+      console.warn("markThreadAsRead warn:", error);
+      return;
+    }
+
+    await refreshUnreadDMIndicator();
   }
 
   // =====================================
@@ -680,24 +686,55 @@ document.addEventListener("DOMContentLoaded", () => {
     const partnerProfiles = await getProfilesByIds(partnerIds);
 
     dmConversationList.innerHTML = "";
+
     partnerIds.forEach((pid, index) => {
       const prof = partnerProfiles[index];
       const dm = latestByPartner.get(pid);
 
+      const isActive = currentDMPartnerId && pid === currentDMPartnerId;
+      const isUnreadFromPartner =
+        dm &&
+        dm.to_user_id === currentUser.id &&
+        dm.from_user_id === pid &&
+        dm.is_read === false;
+
       const item = document.createElement("div");
-      item.className = "dm-conversation-item";
+      item.className = "dm-conversation-item" + (isActive ? " active" : "");
       item.dataset.partnerUid = pid;
+
+      // 未読なら●（CSSは好きに）
+      const unreadDot = isUnreadFromPartner
+        ? `<span class="dm-unread-dot" style="display:inline-block;width:8px;height:8px;border-radius:99px;background:var(--green-main);margin-left:6px;"></span>`
+        : "";
 
       item.innerHTML = `
         <div class="dm-conv-avatar" data-profile-uid="${escapeHTML(pid)}">${escapeHTML(prof.avatar || "🧑‍💻")}</div>
         <div class="dm-conv-main">
-          <div class="dm-conv-name">${escapeHTML(prof.name || "ユーザー")}</div>
+          <div class="dm-conv-name">${escapeHTML(prof.name || "ユーザー")}${unreadDot}</div>
           <div class="dm-conv-last">${escapeHTML(dm?.content || "")}</div>
         </div>
         <div class="dm-conv-time">${formatTime(dm?.created_at)}</div>
       `;
       dmConversationList.appendChild(item);
     });
+  }
+
+  function renderDMMessageRow(dm) {
+    const isMe = dm.from_user_id === currentUser.id;
+    const status = isMe ? (dm.is_read ? "既読" : "送信済み") : "";
+
+    const div = document.createElement("div");
+    div.className = "dm-message " + (isMe ? "me" : "other");
+
+    // 自分のメッセージだけ status 表示
+    div.innerHTML = `
+      <div class="dm-message-text">${escapeHTML(dm.content || "")}</div>
+      <div class="dm-message-time">
+        ${formatTime(dm.created_at)}
+        ${isMe ? `<span class="dm-message-status" style="margin-left:6px; font-size:11px; color:var(--text-sub);">${status}</span>` : ""}
+      </div>
+    `;
+    return div;
   }
 
   async function loadDMThread(partnerId) {
@@ -717,18 +754,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     dmMessagesBox.innerHTML = "";
-    (data || []).forEach((dm) => {
-      const div = document.createElement("div");
-      div.className =
-        "dm-message " + (dm.from_user_id === currentUser.id ? "me" : "other");
-
-      div.innerHTML = `
-        <div class="dm-message-text">${escapeHTML(dm.content || "")}</div>
-        <div class="dm-message-time">${formatTime(dm.created_at)}</div>
-      `;
-      dmMessagesBox.appendChild(div);
-    });
-
+    (data || []).forEach((dm) => dmMessagesBox.appendChild(renderDMMessageRow(dm)));
     dmMessagesBox.scrollTop = dmMessagesBox.scrollHeight;
   }
 
@@ -745,7 +771,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dmPartnerAvatarEl) dmPartnerAvatarEl.textContent = prof.avatar || "🧑‍💻";
 
     updateOnlineUI();
+
+    // 先に既読化 → その後表示すると “既読” が即反映されやすい
+    await markThreadAsRead(userId);
     await loadDMThread(userId);
+    await loadDMConversations();
   }
 
   async function sendDM() {
@@ -776,7 +806,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function subscribeMessagesRealtime() {
     if (!currentUser) return;
 
-    rtChannel?.unsubscribe();
+    // 古いチャンネル掃除
+    try {
+      rtChannel?.unsubscribe?.();
+    } catch (_) {}
+
     rtChannel = supabaseClient
       .channel("rt-messages")
       .on(
@@ -790,11 +824,14 @@ document.addEventListener("DOMContentLoaded", () => {
           if (
             page === "messages" &&
             currentDMPartnerId &&
-            ((row.from_user_id === currentUser.id &&
-              row.to_user_id === currentDMPartnerId) ||
-              (row.from_user_id === currentDMPartnerId &&
-                row.to_user_id === currentUser.id))
+            ((row.from_user_id === currentUser.id && row.to_user_id === currentDMPartnerId) ||
+              (row.from_user_id === currentDMPartnerId && row.to_user_id === currentUser.id))
           ) {
+            // 相手→自分の新着が来たら、開いてるなら即既読化
+            if (row.to_user_id === currentUser.id && row.from_user_id === currentDMPartnerId) {
+              await markThreadAsRead(currentDMPartnerId);
+            }
+
             await loadDMThread(currentDMPartnerId);
             await loadDMConversations();
           }
@@ -808,19 +845,25 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupPresence() {
     if (!currentUser) return;
 
-    presenceChannel?.unsubscribe();
+    try {
+      presenceChannel?.unsubscribe?.();
+    } catch (_) {}
+
     presenceChannel = supabaseClient.channel("presence-global", {
       config: { presence: { key: currentUser.id } },
     });
 
     presenceChannel.on("presence", { event: "sync" }, () => {
-      onlineSet = new Set(Object.keys(presenceChannel.presenceState() || {}));
+      const state = presenceChannel.presenceState?.() || {};
+      onlineSet = new Set(Object.keys(state));
       updateOnlineUI();
     });
+
     presenceChannel.on("presence", { event: "join" }, ({ key }) => {
       onlineSet.add(key);
       updateOnlineUI();
     });
+
     presenceChannel.on("presence", { event: "leave" }, ({ key }) => {
       onlineSet.delete(key);
       updateOnlineUI();
@@ -844,7 +887,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const dot = byId("notifDot");
     if (!dot || !currentUser) return;
 
-    // messagesにis_read列がある前提（なければSQLで追加してね）
     const { count, error } = await supabaseClient
       .from("messages")
       .select("id", { count: "exact", head: true })
@@ -861,9 +903,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =====================================
   function renderNotificationsEmpty(msg = "通知はまだないよ🥺") {
     if (!notificationsContainer) return;
-    notificationsContainer.innerHTML = `
-      <div class="empty-state"><p>${escapeHTML(msg)}</p></div>
-    `;
+    notificationsContainer.innerHTML = `<div class="empty-state"><p>${escapeHTML(msg)}</p></div>`;
   }
 
   function renderNotificationItem(n, actorProfile) {
@@ -1025,9 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const actorIds = Array.from(
-      new Set(all.map((n) => n.actor_id).filter(Boolean))
-    );
+    const actorIds = Array.from(new Set(all.map((n) => n.actor_id).filter(Boolean)));
     const actorProfiles = await getProfilesByIds(actorIds);
     const byIdMap = new Map(actorProfiles.map((p) => [p.id, p]));
 
@@ -1064,7 +1102,8 @@ document.addEventListener("DOMContentLoaded", () => {
       profilesCache.set(targetUserId, prof);
       if (profileNameEl) profileNameEl.textContent = prof.name || "ユーザー";
       if (profileHandleEl) profileHandleEl.textContent = "@" + (prof.handle || "user");
-      if (profileBioEl) profileBioEl.textContent = prof.bio || "プロフィールはまだ書かれていません";
+      if (profileBioEl)
+        profileBioEl.textContent = prof.bio || "プロフィールはまだ書かれていません";
       if (profileAvatarEl) profileAvatarEl.textContent = prof.avatar || "🧑‍💻";
     }
 
@@ -1133,7 +1172,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="replies" data-tweet-id="${t.id}"></div>
         </div>
       `;
-
       profileTweetsContainer.appendChild(article);
     });
 
@@ -1224,7 +1262,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ✅ delete tweet
+    // delete tweet
     const delBtn = e.target.closest(".delete-tweet-btn");
     if (delBtn) {
       const tweetId = delBtn.dataset.tweetId;
@@ -1266,9 +1304,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (replyTextarea && replyCharCounter) {
-      replyTextarea.addEventListener("input", () =>
-        updateCounter(replyTextarea, replyCharCounter)
-      );
+      replyTextarea.addEventListener("input", () => updateCounter(replyTextarea, replyCharCounter));
     }
     if (replySubmitBtn) {
       replySubmitBtn.addEventListener("click", () => {
@@ -1276,9 +1312,7 @@ document.addEventListener("DOMContentLoaded", () => {
         handleReplySubmit(replyingTweetId);
       });
     }
-    if (replyCancelBtn) {
-      replyCancelBtn.addEventListener("click", () => closeModal(replyModal));
-    }
+    if (replyCancelBtn) replyCancelBtn.addEventListener("click", () => closeModal(replyModal));
 
     // image preview (optional)
     if (imageSelectBtn && imageInput && imagePreview) {
