@@ -883,20 +883,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 未読ドット（通知ベルの●）
-  async function refreshUnreadDMIndicator() {
-    const dot = byId("notifDot");
-    if (!dot || !currentUser) return;
+ async function refreshUnreadDMIndicator() {
+  if (!currentUser) return;
 
-    const { count, error } = await supabaseClient
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("to_user_id", currentUser.id)
-      .eq("is_read", false);
+  const dots = document.querySelectorAll("[data-notif-dot]");
+  if (dots.length === 0) return;
 
-    if (!error) {
-      dot.classList.toggle("show", (count || 0) > 0);
-    }
+  const { count, error } = await supabaseClient
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("to_user_id", currentUser.id)
+    .eq("is_read", false);
+
+  if (error) {
+    console.error("unread dm count error:", error);
+    return;
   }
+
+  dots.forEach((dot) => {
+    dot.classList.toggle("show", (count || 0) > 0);
+  });
+}
 
   // =====================================
   // Notifications
