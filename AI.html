@@ -31,27 +31,9 @@
       line-height: 1.5;
       max-width: 85%;
     }
-    .me {
-      align-self: flex-end;
-      background: #e9e9e9;
-    }
-    .bot {
-      align-self: flex-start;
-      background: #ffffff;
-      border: 1px solid #eee;
-    }
-    .row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    input {
-      flex: 1;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      font-size: 15px;
-    }
+    .me { align-self: flex-end; background: #e9e9e9; }
+    .bot { align-self: flex-start; background: #ffffff; border: 1px solid #eee; }
+    .row { display: flex; gap: 8px; margin-top: 12px; }
     button, select {
       padding: 10px 12px;
       border-radius: 12px;
@@ -59,7 +41,6 @@
       background: #fff;
       cursor: pointer;
     }
-    small { opacity: .6; }
     textarea {
       flex: 1;
       padding: 12px 14px;
@@ -69,7 +50,7 @@
       resize: vertical;
       min-height: 44px;
       max-height: 160px;
-}
+    }
   </style>
 </head>
 <body>
@@ -78,18 +59,20 @@
 
 <div class="row">
   <select id="mbti"></select>
+
   <select id="verbosity">
     <option value="short">短め</option>
     <option value="normal" selected>普通</option>
     <option value="long">詳しめ</option>
   </select>
-    <select id="mode">
+
+  <select id="mode">
     <option value="consult" selected>相談</option>
     <option value="chat">雑談</option>
   </select>
+
+  <button id="newThread">新しい会話</button>
 </div>
-
-
 
 <div id="chat"></div>
 
@@ -100,10 +83,19 @@
 
 <script type="module">
   import { MBTI_LIST, MBTI_POLICIES } from "./mbti_policies.js";
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  // ★ここを自分のに変更
+  const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const chat = document.getElementById("chat");
   const msg = document.getElementById("msg");
   const sendBtn = document.getElementById("send");
+  const newThreadBtn = document.getElementById("newThread");
+
   const mbtiSel = document.getElementById("mbti");
   const verbSel = document.getElementById("verbosity");
   const modeSel = document.getElementById("mode");
@@ -114,24 +106,24 @@
     mbti: saved.mbti || "INTJ",
     verbosity: saved.verbosity || "normal",
     mode: saved.mode || "consult",
-    history: []
+    history: [],
+    threadId: null
   };
 
-  // 初期値反映
-  mbtiSel.value = state.mbti;
-  verbSel.value = state.verbosity;
-  modeSel.value = state.mode;
-
-  // MBTI選択肢を埋める
+  // MBTI選択肢
   MBTI_LIST.forEach(t => {
     const o = document.createElement("option");
     o.value = t;
     o.textContent = t;
     mbtiSel.appendChild(o);
   });
-  mbtiSel.value = state.mbti;
 
-  function save() {
+  // 初期値反映
+  mbtiSel.value = state.mbti;
+  verbSel.value = state.verbosity;
+  modeSel.value = state.mode;
+
+  function saveSettings() {
     localStorage.setItem("mbtiSettings", JSON.stringify({
       mbti: state.mbti,
       verbosity: state.verbosity,
@@ -147,25 +139,32 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
+  function resetConversation(note) {
+    state.history = [];
+    state.threadId = null;
+    if (note) add(note, "bot");
+  }
+
   mbtiSel.onchange = () => {
     state.mbti = mbtiSel.value;
-    state.history = [];
-    save();
-    add(`（MBTIスタイルを「${state.mbti}」に変更しました）`, "bot");
+    saveSettings();
+    resetConversation(`（MBTIスタイルを「${state.mbti}」に変更しました。新しい会話として扱います）`);
   };
 
   verbSel.onchange = () => {
     state.verbosity = verbSel.value;
-    state.history = [];
-    save();
-    add(`（文章量を「${state.verbosity}」に変更しました）`, "bot");
+    saveSettings();
+    resetConversation(`（文章量を「${state.verbosity}」に変更しました。新しい会話として扱います）`);
   };
 
   modeSel.onchange = () => {
     state.mode = modeSel.value;
-    state.history = [];
-    save();
-    add(`（モードを「${state.mode === "consult" ? "相談" : "雑談"}」に変更しました）`, "bot");
+    saveSettings();
+    resetConversation(`（モードを「${state.mode === "consult" ? "相談" : "雑談"}」に変更しました。新しい会話として扱います）`);
+  };
+
+  newThreadBtn.onclick = () => {
+    resetConversation("（新しい会話を開始しました）");
   };
 
   function systemPrompt() {
@@ -192,6 +191,50 @@ ${MBTI_POLICIES[state.mbti]}
 `.trim();
   }
 
+  async function requireUser() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) throw new Error("ログインが必要です");
+    return data.user;
+  }
+
+  async function ensureThread() {
+    if (state.threadId) return state.threadId;
+
+    const user = await requireUser();
+
+    const { data: thread, error } = await supabase
+      .from("ai_threads")
+      .insert({
+        user_id: user.id,
+        title: "AI chat",
+        mode: state.mode,
+        mbti: state.mbti
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    state.threadId = thread.id;
+    return state.threadId;
+  }
+
+  async function saveMessage(role, content) {
+    const user = await requireUser();
+    const threadId = await ensureThread();
+
+    const { error } = await supabase
+      .from("ai_messages")
+      .insert({
+        thread_id: threadId,
+        user_id: user.id,
+        role,
+        content
+      });
+
+    if (error) throw error;
+  }
+
   async function send() {
     const text = msg.value.trim();
     if (!text) return;
@@ -201,6 +244,13 @@ ${MBTI_POLICIES[state.mbti]}
 
     add(text, "me");
     state.history.push({ role: "user", content: text });
+
+    // ログ保存（ユーザー発言）
+    try {
+      await saveMessage("user", text);
+    } catch (e) {
+      add(`（ログ保存に失敗：${e.message}）`, "bot");
+    }
 
     add("…考え中", "bot");
     const loading = chat.lastChild;
@@ -216,8 +266,17 @@ ${MBTI_POLICIES[state.mbti]}
       });
 
       const data = await res.json();
-      loading.textContent = data.reply ?? "(返答が空でした)";
-      state.history.push({ role: "assistant", content: loading.textContent });
+      const reply = data.reply ?? "(返答が空でした)";
+      loading.textContent = reply;
+
+      state.history.push({ role: "assistant", content: reply });
+
+      // ログ保存（AI返信）
+      try {
+        await saveMessage("assistant", reply);
+      } catch (e) {
+        add(`（ログ保存に失敗：${e.message}）`, "bot");
+      }
 
     } catch (e) {
       loading.textContent = "エラー：" + e.message;
@@ -226,7 +285,8 @@ ${MBTI_POLICIES[state.mbti]}
 
   sendBtn.onclick = send;
 
-  add("モードを選んで話しかけてみて。", "bot");
+  add("ログイン済みの状態で話しかけてみて。会話ログはユーザーに紐づいて保存されます。", "bot");
 </script>
+
 </body>
 </html>
