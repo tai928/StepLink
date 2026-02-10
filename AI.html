@@ -1,95 +1,98 @@
-<!doctype html>
+ <!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>StepLink Chatbot</title>
+
+  <!-- StepLinkのCSSを直読み -->
+  <link rel="stylesheet" href="https://tai928.github.io/StepLink/style.css">
+
   <style>
-    /* ===========================
-   AI
-=========================== */
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont;
-      max-width: 820px;
-      margin: 24px auto;
-      padding: 0 14px;
-      background: #fafafa;
-    }
-    h1 { margin-bottom: 8px; }
-    #chat {
-      border: 1px solid #ddd;
-      border-radius: 14px;
-      padding: 14px;
-      height: 60vh;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    /* このページだけの微調整（StepLink CSSを壊さない最小限） */
+    .timeline { padding-bottom: 16px; }
+    .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .toolbar select{
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
       background: #fff;
     }
-    .msg {
-      padding: 10px 14px;
-      border-radius: 14px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-      max-width: 85%;
-    }
-    .me { align-self: flex-end; background: #e9e9e9; }
-    .bot { align-self: flex-start; background: #ffffff; border: 1px solid #eee; }
-    .row { display: flex; gap: 8px; margin-top: 12px; }
-    button, select {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      background: #fff;
-      cursor: pointer;
-    }
-    textarea {
-      flex: 1;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      font-size: 15px;
-      resize: vertical;
-      min-height: 44px;
-      max-height: 160px;
+    .toolbar .icon-btn { height: 36px; }
+    .dm-messages { background: #f7f7f7; } /* CSS内にもあるけど念押し */
+    .dm-thread { height: calc(100vh - 56px); } /* ヘッダー分 */
+    @media (max-width: 900px){
+      .dm-thread { height: calc(100vh - 56px - 56px); } /* ボトムナビ分もざっくり */
     }
   </style>
 </head>
+
 <body>
+  <div class="app">
 
-<h1>StepLink chatbot</h1>
+    <!-- 左サイドバー（StepLinkと同じ見た目） -->
+    <aside class="sidebar-left">
+      <div class="logo">StepLink</div>
 
-<div class="row">
-  <select id="mbti"></select>
+      <nav class="nav">
+        <a class="nav-item" href="../">Home</a>
+        <a class="nav-item" href="../messages/">Messages</a>
+        <a class="nav-item active" href="./">AI Chat</a>
+      </nav>
 
-  <select id="verbosity">
-    <option value="short">短め</option>
-    <option value="normal" selected>普通</option>
-    <option value="long">詳しめ</option>
-  </select>
+      <button class="post-button" id="newThread">新しい会話</button>
 
-  <select id="mode">
-    <option value="consult" selected>相談</option>
-    <option value="chat">雑談</option>
-  </select>
+      <div class="account-summary">
+        <div class="account-main">
+          <div class="account-avatar">🙂</div>
+          <div>
+            <div class="account-name">AI Chat</div>
+            <div class="account-handle">@steplink</div>
+          </div>
+        </div>
+      </div>
+    </aside>
 
-  <button id="newThread">新しい会話</button>
-  <a href="index.html" class="nav-item">ホーム</a>
-</div>
+    <!-- メイン -->
+    <main class="timeline">
+      <div class="timeline-header">
+        <div class="toolbar">
+          <strong>AI Chat</strong>
 
-<div id="chat"></div>
+          <select id="mbti"></select>
 
-<div class="row">
-  <textarea id="msg" placeholder="メッセージを入力…"></textarea>
-  <button id="send">送信</button>
-</div>
+          <select id="verbosity">
+            <option value="short">短め</option>
+            <option value="normal" selected>普通</option>
+            <option value="long">詳しめ</option>
+          </select>
+
+          <select id="mode">
+            <option value="consult" selected>相談</option>
+            <option value="chat">雑談</option>
+          </select>
+
+          <button class="icon-btn" id="clear">履歴クリア</button>
+        </div>
+      </div>
+
+      <!-- DMのレイアウトを流用 -->
+      <section class="dm-thread">
+        <div id="chat" class="dm-messages"></div>
+
+        <div class="dm-input-area">
+          <textarea id="msg" placeholder="メッセージを入力…"></textarea>
+          <button id="send" class="dm-send-btn">送信</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
 <script type="module">
   import { MBTI_LIST, MBTI_POLICIES } from "./mbti_policies.js";
   import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  // ★ここを自分のに変更
   const SUPABASE_URL = "https://ngtthuwmqdcxgddlbsyo.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_YJzguO8nmmVKURa58cKwVw__9ulKxI6";
 
@@ -99,6 +102,7 @@
   const msg = document.getElementById("msg");
   const sendBtn = document.getElementById("send");
   const newThreadBtn = document.getElementById("newThread");
+  const clearBtn = document.getElementById("clear");
 
   const mbtiSel = document.getElementById("mbti");
   const verbSel = document.getElementById("verbosity");
@@ -135,9 +139,10 @@
     }));
   }
 
-  function add(text, cls) {
+  // ★ StepLinkのDMスタイルに合わせたメッセージDOM
+  function addMessage(text, who) {
     const d = document.createElement("div");
-    d.className = "msg " + cls;
+    d.className = `dm-message ${who === "me" ? "me" : "other"}`;
     d.textContent = text;
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
@@ -146,30 +151,29 @@
   function resetConversation(note) {
     state.history = [];
     state.threadId = null;
-    if (note) add(note, "bot");
+    if (note) addMessage(note, "other");
   }
 
   mbtiSel.onchange = () => {
     state.mbti = mbtiSel.value;
     saveSettings();
-    resetConversation(`（MBTIスタイルを「${state.mbti}」に変更しました。新しい会話として扱います）`);
+    resetConversation(`（MBTI: ${state.mbti} に変更）`);
   };
 
   verbSel.onchange = () => {
     state.verbosity = verbSel.value;
     saveSettings();
-    resetConversation(`（文章量を「${state.verbosity}」に変更しました。新しい会話として扱います）`);
+    resetConversation(`（文章量: ${state.verbosity} に変更）`);
   };
 
   modeSel.onchange = () => {
     state.mode = modeSel.value;
     saveSettings();
-    resetConversation(`（モードを「${state.mode === "consult" ? "相談" : "雑談"}」に変更しました。新しい会話として扱います）`);
+    resetConversation(`（モード: ${state.mode === "consult" ? "相談" : "雑談"} に変更）`);
   };
 
-  newThreadBtn.onclick = () => {
-    resetConversation("（新しい会話を開始しました）");
-  };
+  newThreadBtn.onclick = () => resetConversation("（新しい会話を開始しました）");
+  clearBtn.onclick = () => { chat.innerHTML = ""; resetConversation("（表示をクリアしました）"); };
 
   function systemPrompt() {
     const len =
@@ -246,17 +250,15 @@ ${MBTI_POLICIES[state.mbti]}
     msg.value = "";
     msg.focus();
 
-    add(text, "me");
+    addMessage(text, "me");
     state.history.push({ role: "user", content: text });
 
-    // ログ保存（ユーザー発言）
-    try {
-      await saveMessage("user", text);
-    } catch (e) {
-      add(`（ログ保存に失敗：${e.message}）`, "bot");
-    }
+    // userログ保存
+    try { await saveMessage("user", text); }
+    catch (e) { addMessage(`（ログ保存失敗：${e.message}）`, "other"); }
 
-    add("…考え中", "bot");
+    // thinking
+    addMessage("…考え中", "other");
     const loading = chat.lastChild;
 
     try {
@@ -271,16 +273,13 @@ ${MBTI_POLICIES[state.mbti]}
 
       const data = await res.json();
       const reply = data.reply ?? "(返答が空でした)";
-      loading.textContent = reply;
 
+      loading.textContent = reply;
       state.history.push({ role: "assistant", content: reply });
 
-      // ログ保存（AI返信）
-      try {
-        await saveMessage("assistant", reply);
-      } catch (e) {
-        add(`（ログ保存に失敗：${e.message}）`, "bot");
-      }
+      // assistantログ保存
+      try { await saveMessage("assistant", reply); }
+      catch (e) { addMessage(`（ログ保存失敗：${e.message}）`, "other"); }
 
     } catch (e) {
       loading.textContent = "エラー：" + e.message;
@@ -289,7 +288,7 @@ ${MBTI_POLICIES[state.mbti]}
 
   sendBtn.onclick = send;
 
-  add("ログイン済みの状態で話しかけてみて。会話ログはユーザーに紐づいて保存されます。", "bot");
+  addMessage("StepLinkスタイルで動作中。ログイン済みで話しかけてね。", "other");
 </script>
 
 </body>
