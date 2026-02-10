@@ -4,12 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>StepLink Chatbot</title>
-
-  <!-- StepLinkのCSSを直読み -->
   <link rel="stylesheet" href="https://tai928.github.io/StepLink/style.css">
 
   <style>
-    /* このページだけの微調整（StepLink CSSを壊さない最小限） */
     .timeline { padding-bottom: 16px; }
     .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .toolbar select{
@@ -19,10 +16,10 @@
       background: #fff;
     }
     .toolbar .icon-btn { height: 36px; }
-    .dm-messages { background: #f7f7f7; } /* CSS内にもあるけど念押し */
-    .dm-thread { height: calc(100vh - 56px); } /* ヘッダー分 */
+    .dm-messages { background: #f7f7f7; } 
+    .dm-thread { height: calc(100vh - 56px); }
     @media (max-width: 900px){
-      .dm-thread { height: calc(100vh - 56px - 56px); } /* ボトムナビ分もざっくり */
+      .dm-thread { height: calc(100vh - 56px - 56px); } 
     }
   </style>
 </head>
@@ -52,10 +49,10 @@
 
       <div class="account-summary">
         <div class="account-main">
-          <div class="account-avatar">🙂</div>
+          <div class="account-avatar">🤖</div>
           <div>
-            <div class="account-name">AI Chat</div>
-            <div class="account-handle">@steplink</div>
+            <div class="account-name">AI</div>
+            <div class="account-handle">@AI</div>
           </div>
         </div>
       </div>
@@ -296,7 +293,7 @@ ${MBTI_POLICIES[state.mbti]}
 
   sendBtn.onclick = send;
 
-  addMessage("StepLinkスタイルで動作中。ログイン済みで話しかけてね。", "other");
+  addMessage("ログイン後、使用可能", "other");
 </script>
 
 </body>
