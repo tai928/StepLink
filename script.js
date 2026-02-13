@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentProfile = null;
 
   let currentDMPartnerId = null;
-  const profilesCache = new Map(); // id -> profile
+  const profilesCache = new Map();
 
   let rtChannel = null;
   let presenceChannel = null;
@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = regPasswordInput.value;
 
     if (!name || !handle || !email || !password) {
-      if (registerError) registerError.textContent = "必須項目が空だよ🥺";
+      if (registerError) registerError.textContent = "項目未記入";
       return;
     }
     if (registerError) registerError.textContent = "";
@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("signUp error:", error);
       if (registerError) {
         if (error.message?.includes("User already registered")) {
-          registerError.textContent = "このメールは登録済み。ログインしてね。";
+          registerError.textContent = "登録済みです";
           switchAccountTab("login");
         } else {
           registerError.textContent = error.message;
@@ -268,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (profileErr) console.warn("profiles upsert warn:", profileErr);
     }
 
-    alert("アカウント作成できたよ💚 メール確認してからログインしてね！");
+    alert("アカウント作成完了、ログインしてください");
     switchAccountTab("login");
   }
 
@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = loginPasswordInput.value;
 
     if (!email || !password) {
-      if (loginError) loginError.textContent = "メールとパスワードを入れてね🥺";
+      if (loginError) loginError.textContent = "メールまたはパスワードを入力してください";
       return;
     }
     if (loginError) loginError.textContent = "";
@@ -469,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (error) {
       console.error("tweet insert error:", error);
-      alert("投稿に失敗しちゃった…😭");
+      alert("接続エラー");
       return;
     }
     await loadTweetsFromDB();
@@ -480,7 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = input.value.trim();
     if (!text) return;
     if (text.length > 140) {
-      alert("140文字までだよ🥺");
+      alert("文字数制限です。");
       return;
     }
 
@@ -494,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function deleteTweet(tweetId) {
     if (!currentUser) return;
 
-    const ok = confirm("この投稿を削除する？（元に戻せない）");
+    const ok = confirm("削除しますか？");
     if (!ok) return;
 
     // 外部キーCASCADEが無い場合の保険
@@ -509,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (error) {
       console.error("delete tweet error:", error);
-      alert("削除できなかった…😭（RLS/権限を確認して）");
+      alert("接続エラー");
       return;
     }
 
@@ -535,14 +535,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleReplySubmit(tweetId, textFromModal) {
     if (!currentUser) {
-      alert("ログインしてから返信してね🥺");
+      alert("ログインしてください");
       return;
     }
 
     const text = textFromModal ?? replyTextarea?.value?.trim() ?? "";
     if (!text) return;
     if (text.length > 140) {
-      alert("140文字までだよ🥺");
+      alert("文字数制限");
       return;
     }
 
@@ -565,7 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (error) {
       console.error("reply insert error:", error);
-      alert("返信失敗しちゃった…😭");
+      alert("接続エラー");
       return;
     }
 
@@ -582,7 +582,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =====================================
   async function toggleLike(tweetId, btn) {
     if (!currentUser) {
-      alert("ログインしてからいいねしてね🥺");
+      alert("ログインしてください");
       return;
     }
 
@@ -772,7 +772,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateOnlineUI();
 
-    // 先に既読化 → その後表示すると “既読” が即反映されやすい
     await markThreadAsRead(userId);
     await loadDMThread(userId);
     await loadDMConversations();
@@ -793,7 +792,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (error) {
       console.error("dm insert error:", error);
-      alert("DM送信に失敗した…😭");
+      alert("接続エラー");
       return;
     }
 
@@ -820,14 +819,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const row = payload.new || payload.old;
           if (!row) return;
 
-          // messagesページで対象スレッドなら更新
           if (
             page === "messages" &&
             currentDMPartnerId &&
             ((row.from_user_id === currentUser.id && row.to_user_id === currentDMPartnerId) ||
               (row.from_user_id === currentDMPartnerId && row.to_user_id === currentUser.id))
           ) {
-            // 相手→自分の新着が来たら、開いてるなら即既読化
             if (row.to_user_id === currentUser.id && row.from_user_id === currentDMPartnerId) {
               await markThreadAsRead(currentDMPartnerId);
             }
@@ -882,7 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
     badge.textContent = onlineSet.has(currentDMPartnerId) ? "オンライン" : "オフライン";
   }
 
-  // 未読ドット（通知ベルの●）
+  // 未読ドット
  async function refreshUnreadDMIndicator() {
   if (!currentUser) return;
 
@@ -908,7 +905,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =====================================
   // Notifications
   // =====================================
-  function renderNotificationsEmpty(msg = "通知はまだないよ🥺") {
+  function renderNotificationsEmpty(msg = "通知はありません") {
     if (!notificationsContainer) return;
     notificationsContainer.innerHTML = `<div class="empty-state"><p>${escapeHTML(msg)}</p></div>`;
   }
@@ -975,7 +972,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!notificationsContainer) return;
 
     if (!currentUser) {
-      renderNotificationsEmpty("ログインすると通知が見れるよ🥺");
+      renderNotificationsEmpty("ログインしてください");
       return;
     }
 
@@ -989,7 +986,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (myTweetsErr) {
       console.error("my tweets load error:", myTweetsErr);
-      renderNotificationsEmpty("通知の読み込みに失敗した…😭");
+      renderNotificationsEmpty("接続エラー");
       return;
     }
 
@@ -1068,7 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .slice(0, 60);
 
     if (all.length === 0) {
-      renderNotificationsEmpty("通知はまだないよ🥺");
+      renderNotificationsEmpty("通知はありません");
       return;
     }
 
@@ -1227,7 +1224,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (error) {
       console.error("profile update error:", error);
-      alert("プロフィール更新失敗した…😭");
+      alert("接続エラー");
       return;
     }
 
