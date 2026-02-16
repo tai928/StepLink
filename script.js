@@ -37,15 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const profileTweetsContainer = byId("profileTweetsContainer");
   const notificationsContainer = byId("notificationsContainer");
 
-  // MBTI選択
-  const MBTI_LIST = [
-  'INTJ','INTP','ENTJ','ENTP',
-  'INFJ','INFP','ENFJ','ENFP',
-  'ISTJ','ISFJ','ESTJ','ESFJ',
-  'ISTP','ISFP','ESTP','ESFP'
-];
-
-
   // アカウント表示
   const currentUserNameEl = byId("currentUserName");
   const currentUserHandleEl = byId("currentUserHandle");
@@ -69,6 +60,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const regPasswordInput = byId("regPasswordInput");
   const registerError = byId("registerError");
   const registerSubmitBtn = byId("registerSubmitBtn");
+
+  // ✅ MBTI（登録）
+  const regMbtiGrid = byId("regMbtiGrid");
+  const regMbtiValue = byId("regMbtiValue");
 
   const loginHandleInput = byId("loginHandleInput");
   const loginPasswordInput = byId("loginPasswordInput");
@@ -112,6 +107,10 @@ document.addEventListener("DOMContentLoaded", () => {
     byId("editProfileAvatar") || byId("editAvatarInput");
   const editProfileBioTextarea = byId("editProfileBio") || byId("editBioInput");
   const editProfileSaveBtn = byId("editProfileSaveBtn") || byId("saveProfileBtn");
+
+  // ✅ MBTI（編集）
+  const editMbtiGrid = byId("editMbtiGrid");
+  const editMbtiValue = byId("editMbtiValue");
 
   // DM
   const dmLayout = $(".dm-layout");
@@ -158,6 +157,44 @@ document.addEventListener("DOMContentLoaded", () => {
     counter.textContent = `${input.value.length} / 140`;
   }
 
+  // =====================================
+  // MBTI Picker
+  // =====================================
+  const MBTI_LIST = [
+    "INTJ","INTP","ENTJ","ENTP",
+    "INFJ","INFP","ENFJ","ENFP",
+    "ISTJ","ISFJ","ESTJ","ESFJ",
+    "ISTP","ISFP","ESTP","ESFP",
+  ];
+
+  function mountMbtiPicker({ gridEl, hiddenInputEl, initialValue = null }) {
+    if (!gridEl || !hiddenInputEl) return;
+
+    gridEl.innerHTML = "";
+
+    const setValue = (v) => {
+      hiddenInputEl.value = v || "";
+      Array.from(gridEl.querySelectorAll(".mbti-btn")).forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.value === v);
+      });
+    };
+
+    MBTI_LIST.forEach((type) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mbti-btn";
+      btn.textContent = type;
+      btn.dataset.value = type;
+      btn.addEventListener("click", () => setValue(type));
+      gridEl.appendChild(btn);
+    });
+
+    if (initialValue && MBTI_LIST.includes(initialValue)) setValue(initialValue);
+  }
+
+  // =====================================
+  // UI反映
+  // =====================================
   function applyUserUI(user, profile) {
     const name =
       profile?.name ||
@@ -201,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const { data: profileData, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("id,name,handle,avatar,bio")
+      .select("id,name,handle,avatar,bio,mbti")
       .eq("id", currentUser.id)
       .maybeSingle();
 
@@ -241,6 +278,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const avatar = (regAvatarInput?.value.trim() || "🧑‍💻").trim();
     const password = regPasswordInput.value;
 
+    // ✅ MBTI（未選択なら null）
+    const mbti = regMbtiValue?.value?.trim() || null;
+
     if (!name || !handle || !email || !password) {
       if (registerError) registerError.textContent = "項目未記入";
       return;
@@ -273,6 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
         name,
         handle,
         avatar,
+        mbti,
       });
       if (profileErr) console.warn("profiles upsert warn:", profileErr);
     }
@@ -312,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (missing.length > 0) {
       const { data, error } = await supabaseClient
         .from("profiles")
-        .select("id,name,handle,avatar,bio")
+        .select("id,name,handle,avatar,bio,mbti")
         .in("id", missing);
 
       if (!error && data) data.forEach((p) => profilesCache.set(p.id, p));
@@ -326,6 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
           handle: "user",
           avatar: "🧑‍💻",
           bio: "",
+          mbti: null,
         }
     );
   }
@@ -641,7 +683,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function markThreadAsRead(partnerId) {
     if (!currentUser || !partnerId) return;
 
-    // 自分が受け取った(相手→自分) 未読だけ既読化
     const { error } = await supabaseClient
       .from("messages")
       .update({ is_read: true })
@@ -650,7 +691,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .eq("is_read", false);
 
     if (error) {
-      // RLSでupdate許可してないとここで死ぬ
       console.warn("markThreadAsRead warn:", error);
       return;
     }
@@ -679,7 +719,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // partnerごとに最新
     const latestByPartner = new Map();
     (data || []).forEach((dm) => {
       const partnerId =
@@ -711,7 +750,6 @@ document.addEventListener("DOMContentLoaded", () => {
       item.className = "dm-conversation-item" + (isActive ? " active" : "");
       item.dataset.partnerUid = pid;
 
-      // 未読なら●（CSSは好きに）
       const unreadDot = isUnreadFromPartner
         ? `<span class="dm-unread-dot" style="display:inline-block;width:8px;height:8px;border-radius:99px;background:var(--green-main);margin-left:6px;"></span>`
         : "";
@@ -735,7 +773,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const div = document.createElement("div");
     div.className = "dm-message " + (isMe ? "me" : "other");
 
-    // 自分のメッセージだけ status 表示
     div.innerHTML = `
       <div class="dm-message-text">${escapeHTML(dm.content || "")}</div>
       <div class="dm-message-time">
@@ -814,7 +851,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function subscribeMessagesRealtime() {
     if (!currentUser) return;
 
-    // 古いチャンネル掃除
     try {
       rtChannel?.unsubscribe?.();
     } catch (_) {}
@@ -889,30 +925,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 未読ドット
- async function refreshUnreadDMIndicator() {
-  if (!currentUser) return;
+  async function refreshUnreadDMIndicator() {
+    if (!currentUser) return;
 
-  const dots = document.querySelectorAll("[data-notif-dot]");
-  if (dots.length === 0) return;
+    const dots = document.querySelectorAll("[data-notif-dot]");
+    if (dots.length === 0) return;
 
-  const { count, error } = await supabaseClient
-    .from("messages")
-    .select("id", { count: "exact", head: true })
-    .eq("to_user_id", currentUser.id)
-    .eq("is_read", false);
+    const { count, error } = await supabaseClient
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("to_user_id", currentUser.id)
+      .eq("is_read", false);
 
-  if (error) {
-    console.error("unread dm count error:", error);
-    return;
+    if (error) {
+      console.error("unread dm count error:", error);
+      return;
+    }
+
+    dots.forEach((dot) => {
+      dot.classList.toggle("show", (count || 0) > 0);
+    });
   }
 
-  dots.forEach((dot) => {
-    dot.classList.toggle("show", (count || 0) > 0);
-  });
-}
-
   // =====================================
-  // Notifications
+  // Notifications（元のまま）
   // =====================================
   function renderNotificationsEmpty(msg = "通知はありません") {
     if (!notificationsContainer) return;
@@ -987,7 +1023,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     notificationsContainer.innerHTML = "";
 
-    // 自分のツイートID
     const { data: myTweets, error: myTweetsErr } = await supabaseClient
       .from("tweets")
       .select("id")
@@ -1001,7 +1036,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const myTweetIds = (myTweets || []).map((t) => t.id);
 
-    // replies
     let replyNotifs = [];
     if (myTweetIds.length > 0) {
       const { data: replies, error: repliesErr } = await supabaseClient
@@ -1025,7 +1059,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // likes（tweet_likesにcreated_atがある前提）
     let likeNotifs = [];
     if (myTweetIds.length > 0) {
       const { data: likes, error: likesErr } = await supabaseClient
@@ -1048,7 +1081,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // dm（自分宛て）
     let dmNotifs = [];
     const { data: dms, error: dmsErr } = await supabaseClient
       .from("messages")
@@ -1094,7 +1126,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetUserId = uidParam || currentUser?.id;
     if (!targetUserId) return;
 
-    // 自分/他人でボタン
     if (editProfileBtn) {
       editProfileBtn.style.display =
         currentUser && targetUserId === currentUser.id ? "inline-flex" : "none";
@@ -1107,7 +1138,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const { data: prof, error } = await supabaseClient
       .from("profiles")
-      .select("id,name,handle,avatar,bio")
+      .select("id,name,handle,avatar,bio,mbti")
       .eq("id", targetUserId)
       .maybeSingle();
 
@@ -1115,8 +1146,7 @@ document.addEventListener("DOMContentLoaded", () => {
       profilesCache.set(targetUserId, prof);
       if (profileNameEl) profileNameEl.textContent = prof.name || "ユーザー";
       if (profileHandleEl) profileHandleEl.textContent = "@" + (prof.handle || "user");
-      if (profileBioEl)
-        profileBioEl.textContent = prof.bio || "プロフィールはまだ書かれていません";
+      if (profileBioEl) profileBioEl.textContent = prof.bio || "プロフィールはまだ書かれていません";
       if (profileAvatarEl) profileAvatarEl.textContent = prof.avatar || "🧑‍💻";
     }
 
@@ -1136,7 +1166,6 @@ document.addEventListener("DOMContentLoaded", () => {
     profileTweetsContainer.innerHTML = "";
     const ids = (tweets || []).map((t) => t.id);
 
-    // likes summary
     const likesByTweet = new Map();
     const likedByMe = new Set();
 
@@ -1188,7 +1217,6 @@ document.addEventListener("DOMContentLoaded", () => {
       profileTweetsContainer.appendChild(article);
     });
 
-    // replies render
     if (ids.length > 0) {
       const { data: replies, error: rErr } = await supabaseClient
         .from("tweet_replies")
@@ -1212,6 +1240,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editProfileAvatarInput) editProfileAvatarInput.value = prof.avatar || "";
     if (editProfileBioTextarea) editProfileBioTextarea.value = prof.bio || "";
 
+    // ✅ MBTI 初期表示
+    if (editMbtiGrid && editMbtiValue) {
+      editMbtiValue.value = prof.mbti || "";
+      mountMbtiPicker({
+        gridEl: editMbtiGrid,
+        hiddenInputEl: editMbtiValue,
+        initialValue: prof.mbti || null,
+      });
+    }
+
     openModal(editProfileModal);
   }
 
@@ -1223,12 +1261,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const avatar = editProfileAvatarInput?.value?.trim() || null;
     const bio = editProfileBioTextarea?.value?.trim() || null;
 
+    // ✅ MBTI 保存
+    const mbti = editMbtiValue?.value?.trim() || null;
+
     const { error } = await supabaseClient.from("profiles").upsert({
       id: currentUser.id,
       name,
       handle,
       avatar,
       bio,
+      mbti,
     });
 
     if (error) {
@@ -1237,7 +1279,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    currentProfile = { id: currentUser.id, name, handle, avatar, bio };
+    currentProfile = { id: currentUser.id, name, handle, avatar, bio, mbti };
     profilesCache.set(currentUser.id, currentProfile);
     applyUserUI(currentUser, currentProfile);
     closeModal(editProfileModal);
@@ -1247,7 +1289,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Global click handlers
   // =====================================
   document.addEventListener("click", (e) => {
-    // profile jump
     const profTarget = e.target.closest("[data-profile-uid]");
     if (profTarget) {
       const uid = profTarget.dataset.profileUid;
@@ -1259,7 +1300,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // reply
     const replyBtn = e.target.closest(".reply-btn");
     if (replyBtn) {
       const tweetId = replyBtn.dataset.tweetId;
@@ -1267,7 +1307,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // like
     const likeBtn = e.target.closest(".like-btn");
     if (likeBtn) {
       const tweetId = likeBtn.dataset.tweetId;
@@ -1275,7 +1314,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // delete tweet
     const delBtn = e.target.closest(".delete-tweet-btn");
     if (delBtn) {
       const tweetId = delBtn.dataset.tweetId;
@@ -1307,6 +1345,15 @@ document.addEventListener("DOMContentLoaded", () => {
       logoutBtn.addEventListener("click", async () => {
         await supabaseClient.auth.signOut();
         location.href = "index.html";
+      });
+    }
+
+    // ✅ MBTI Picker mount（登録）
+    if (regMbtiGrid && regMbtiValue) {
+      mountMbtiPicker({
+        gridEl: regMbtiGrid,
+        hiddenInputEl: regMbtiValue,
+        initialValue: null,
       });
     }
 
