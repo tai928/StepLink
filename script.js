@@ -37,6 +37,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const profileTweetsContainer = byId("profileTweetsContainer");
   const notificationsContainer = byId("notificationsContainer");
 
+  // MBTI選択
+  const MBTI_LIST = [
+  'INTJ','INTP','ENTJ','ENTP',
+  'INFJ','INFP','ENFJ','ENFP',
+  'ISTJ','ISFJ','ESTJ','ESFJ',
+  'ISTP','ISFP','ESTP','ESFP'
+];
+
+
   // アカウント表示
   const currentUserNameEl = byId("currentUserName");
   const currentUserHandleEl = byId("currentUserHandle");
