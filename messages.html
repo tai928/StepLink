@@ -6,14 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel=“icon” href=“/icon.ico” type=“image/x-icon”>
 </head>
 <body data-page="messages">
   <div class="app">
-    <!-- 左サイドバー-->
+    <!-- 左サイドバー（PC） -->
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
-    
+
     <nav class="nav">
       <a href="index.html" class="nav-item">ホーム</a>
       <a href="messages.html" class="nav-item">メッセージ</a>
@@ -25,7 +24,6 @@
         通知
       </a>
       <a href="profile.html" class="nav-item">プロフィール</a>
-      <a href="AI.html" class="nav-item">AI</a>
     </nav>
 
       
@@ -107,6 +105,10 @@
           <label>名前<input id="regNameInput" type="text" /></label>
           <label>ハンドル（@なし）<input id="regHandleInput" type="text" /></label>
           <label>メール<input id="regEmailInput" type="email" /></label>
+
+        <label>MBTI
+          <select id="regMbtiSelect"></select>
+        </label>
           <label>絵文字<input id="regAvatarInput" type="text" placeholder="🎣" /></label>
           <label>パスワード<input id="regPasswordInput" type="password" /></label>
           <button class="primary" id="registerSubmitBtn">アカウント作成</button>
