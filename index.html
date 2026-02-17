@@ -147,12 +147,11 @@
           <label>名前<input id="regNameInput" type="text" /></label>
           <label>ハンドル（@なし）<input id="regHandleInput" type="text" /></label>
           <label>メール<input id="regEmailInput" type="email" /></label>
+
+        <label>MBTI
+          <select id="regMbtiSelect"></select>
+        </label>
           <label>絵文字<input id="regAvatarInput" type="text" placeholder="🎣" /></label>
-          <div class="mbti-field">
-            <div class="label">MBTI</div>
-            <div id="mbtiGrid" class="mbti-grid"></div>
-            <input type="hidden" id="mbtiValue" name="mbti" value="">
-          </div>
           <label>パスワード<input id="regPasswordInput" type="password" /></label>
           <button class="primary" id="registerSubmitBtn">アカウント作成</button>
           <div id="registerError" class="account-error"></div>
