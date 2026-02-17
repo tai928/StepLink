@@ -34,27 +34,6 @@ body {
 }
 
 /* ===========================
-   MBTIボタン
-=========================== */
-.mbti-grid{
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:10px;
-}
-.mbti-btn{
-  padding:10px 12px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background: var(--bg-white);
-  cursor:pointer;
-  font-weight:700;
-}
-.mbti-btn.active{
-  border-color: var(--green-main);
-  box-shadow: 0 0 0 3px rgba(129,179,59,.2);
-}
-
-/* ===========================
    左サイドバー
 =========================== */
 .sidebar-left {
@@ -959,4 +938,29 @@ body[data-page="messages"] {
     border-bottom: 1px solid var(--line);
     max-height: 180px;
   }
+}
+
+/* MBTI badge */
+.mbti-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:12px;
+  line-height:1;
+  border:1px solid var(--line);
+  background: var(--bg-white);
+  color: var(--text-sub);
+  margin-left:6px;
+  vertical-align:middle;
+}
+
+/* DM unread dot (used in conversation list) */
+.dm-unread-dot{
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:99px;
+  background:var(--green-main);
+  margin-left:6px;
 }
