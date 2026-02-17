@@ -75,7 +75,6 @@
     </main>
   </div>
 
-
   <!-- プロフィール編集モーダル（★IDをscript.jsに合わせる） -->
   <div id="editProfileModal" class="modal hidden">
     <div class="modal-backdrop"></div>
@@ -83,30 +82,28 @@
       <header class="modal-header">
         <button id="closeEditProfileModalBtn" class="icon-btn">✕</button>
       </header>
-  
+
       <div class="modal-body edit-profile-body">
         <label>名前
           <input id="editProfileName" type="text" />
         </label>
-  
+
         <label>ハンドル（@なし）
           <input id="editProfileHandle" type="text" />
         </label>
-  
+
         <label>アイコン絵文字
           <input id="editProfileAvatar" type="text" placeholder="🎣" />
         </label>
-  
+
+        <label>MBTI
+          <select id="editProfileMbti"></select>
+        </label>
+
         <label>自己紹介（bio）
           <textarea id="editProfileBio" rows="4"></textarea>
         </label>
-  
-        <div class="mbti-field">
-          <div class="label">MBTI</div>
-          <div id="editMbtiGrid" class="mbti-grid"></div>
-          <input type="hidden" id="editMbtiValue" value="">
-        </div>
-  
+
         <button id="editProfileSaveBtn" class="primary">保存する</button>
       </div>
     </div>
@@ -138,6 +135,10 @@
           <label>ハンドル（@なし）<input id="regHandleInput" type="text" /></label>
           <label>メール<input id="regEmailInput" type="email" /></label>
           <label>絵文字<input id="regAvatarInput" type="text" placeholder="🎣" /></label>
+
+        <label>MBTI
+          <select id="regMbtiSelect"></select>
+        </label>
           <label>パスワード<input id="regPasswordInput" type="password" /></label>
           <button class="primary" id="registerSubmitBtn">アカウント作成</button>
           <div id="registerError" class="account-error"></div>
