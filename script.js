@@ -43,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function fillMbtiSelect(selectEl, value) {
     if (!selectEl) return;
 
-    // すでにoptionがあれば触らない（AI.htmlみたいに別用途があるため）
     if (selectEl.options && selectEl.options.length > 0) return;
 
     MBTI_LIST.forEach((mbti) => {
@@ -59,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =====================================
-  // 主要DOM
+  // Important DOM
   // =====================================
   // account summary
   const currentUserNameEl = byId("currentUserName");
@@ -519,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function createTweet(text) {
     if (!currentUser) {
-      alert("ログインしてから投稿してね🥺");
+      alert("ログイン、または新規登録してください");
       return;
     }
 
@@ -552,7 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = input.value.trim();
     if (!text) return;
     if (text.length > 140) {
-      alert("文字数制限です。");
+      alert("文字数制限");
       return;
     }
 
@@ -595,7 +594,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function openReplyUI(tweetId) {
     replyingTweetId = tweetId;
     if (!replyModal || !replyInput || !replyCounter) {
-      const text = prompt("返信内容を入力してね");
+      const text = prompt("返信内容を入力してください");
       if (text && text.trim()) handleReplySubmit(tweetId, text.trim());
       return;
     }
@@ -608,7 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleReplySubmit(tweetId, textFromModal) {
     if (!currentUser) {
-      alert("ログインしてください");
+      alert("ログインまたは新規登録してください");
       return;
     }
 
@@ -657,7 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =====================================
   async function toggleLike(tweetId, btn) {
     if (!currentUser) {
-      alert("ログインしてください");
+      alert("ログイン、または新規登録してください");
       return;
     }
 
@@ -702,7 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =====================================
-  // DM 既読（重要）
+  // DM Read
   // =====================================
   async function markThreadAsRead(partnerId) {
     if (!currentUser || !partnerId) return;
@@ -944,7 +943,7 @@ document.addEventListener("DOMContentLoaded", () => {
     badge.textContent = onlineSet.has(currentDMPartnerId) ? "オンライン" : "オフライン";
   }
 
-  // 未読ドット（通知/メッセージ用）
+  // Unread
   async function refreshUnreadDMIndicator() {
     if (!currentUser) return;
 
@@ -1042,7 +1041,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!notificationsContainer) return;
 
     if (!currentUser) {
-      renderNotificationsEmpty("ログインしてください");
+      renderNotificationsEmpty("ログイン、または新規登録してください");
       return;
     }
 
@@ -1241,7 +1240,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="post-footer">
             <button class="icon-btn reply-btn" data-tweet-id="${t.id}">返信</button>
             <button class="icon-btn like-btn" data-tweet-id="${t.id}">
-              <span class="like-icon">${likedByMe.has(t.id) ? "♥" : "♡"}</span>
+              <span class="like-icon">${likedByMe.has(t.id) ? "❤️" : "♡"}</span>
               <span class="like-count">${likeUsers.length}</span>
             </button>
             ${isMine ? `<button class="icon-btn delete-tweet-btn" data-tweet-id="${t.id}">削除</button>` : ""}
