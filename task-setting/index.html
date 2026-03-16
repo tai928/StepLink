@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StepLink | タスク設定</title>
+  <link rel="stylesheet" href="./task-setting.css" />
+</head>
+<body>
+  <div class="task-page">
+    <header class="hero">
+      <div>
+        <p class="hero-label">StepLink Task Setting</p>
+        <h1>実行案からタスクを設定</h1>
+        <p class="hero-text">
+          気になる実行案を選んで、期限やメモを追加し、自分だけのタスクとして保存できます。
+        </p>
+      </div>
+
+      <div class="hero-search">
+        <label for="planSearch">実行案を検索</label>
+        <input id="planSearch" type="text" placeholder="例：進路、学習、挑戦" />
+      </div>
+    </header>
+
+    <main class="task-layout">
+      <section>
+        <div id="plansList" class="plans-list"></div>
+      </section>
+
+      <aside class="detail-panel" id="detailPanel">
+        <div class="detail-empty">左の実行案を選ぶと詳細が表示されます。</div>
+      </aside>
+    </main>
+
+    <section class="saved-section">
+      <div class="saved-header">
+        <h2>保存済みタスク</h2>
+        <button id="reloadTasksBtn" class="sub-btn">再読み込み</button>
+      </div>
+      <div id="savedTasksList" class="saved-tasks-list"></div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../data/taskPlans.js"></script>
+  <script src="./task-setting.js"></script>
+</body>
+</html>
