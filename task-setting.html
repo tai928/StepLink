@@ -6,26 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="icon" href="/icon.ico" type="image/x-icon" />
+  <link rel="icon" href="/icon.ico" type="image/x-icon">
 </head>
 <body data-page="task-setting">
   <div class="app">
     <aside class="sidebar-left">
       <div class="logo">StepLink</div>
-      <nav class="nav">
-        <a href="index.html" class="nav-item">ホーム</a>
-        <a href="messages.html" class="nav-item">メッセージ</a>
-        <a href="notifications.html" class="nav-item notif-nav">
-          <span class="notif-wrap">🔔<span class="notif-dot" data-notif-dot></span></span>
-          通知
-        </a>
-        <a href="profile.html" class="nav-item">プロフィール</a>
-        <a href="AI.html" class="nav-item">AI</a>
-        <a href="task-setting.html" class="nav-item active">タスク</a>
-      </nav>
-
-      <button class="post-button" type="button" onclick="document.getElementById('taskPlanTitle')?.focus()">実行案を作る</button>
-
+    <nav class="nav">
+      <a href="index.html" class="nav-item">ホーム</a>
+      <a href="messages.html" class="nav-item">メッセージ</a>
+      <a href="notifications.html" class="nav-item notif-nav">
+        <span class="notif-wrap">
+          🔔
+          <span class="notif-dot" data-notif-dot></span>
+        </span>
+        通知
+      </a>
+      <a href="profile.html" class="nav-item">プロフィール</a>
+      <a href="task-setting.html" class="nav-item">タスク設定</a>
+      <a href="task-plans.html" class="nav-item">実行案管理</a>
+      <a href="AI.html" class="nav-item">AI</a>
+    </nav>
       <div class="account-summary">
         <div class="account-main">
           <div class="account-avatar" id="currentUserAvatar">🧑‍💻</div>
@@ -39,51 +40,41 @@
       </div>
     </aside>
 
-    <main class="timeline task-page-main">
+    <main class="timeline task-setting-timeline task-layout-page">
       <header class="timeline-header">
-        <div>
-          <h1>タスク設定</h1>
-          <div class="task-page-sub">実行案を自分で入力して、そのままタスク保存までできるページ</div>
-        </div>
+        <h1>タスク設定</h1>
       </header>
 
-      <section class="task-layout">
-        <div class="task-column">
-          <h2>実行案を追加</h2>
-          <form id="taskPlanForm" class="task-form-grid">
-            <label>カテゴリ<input id="taskPlanCategory" type="text" maxlength="40" placeholder="例：学習計画" required /></label>
-            <label>タイトル<input id="taskPlanTitle" type="text" maxlength="100" placeholder="例：毎日英語15分" required /></label>
-            <label>一覧用の短い説明<textarea id="taskPlanExcerpt" maxlength="180" placeholder="一覧で最初に見える説明" required></textarea></label>
-            <label>詳細説明<textarea id="taskPlanDetail" maxlength="1200" placeholder="選択後に表示する詳しい説明" required></textarea></label>
-            <label>サムネ画像URL<input id="taskPlanThumbnail" type="url" placeholder="https://..." /></label>
-            <label>やること 1<input id="taskPlanPoint1" type="text" maxlength="100" placeholder="例：単語帳を10個進める" /></label>
-            <label>やること 2<input id="taskPlanPoint2" type="text" maxlength="100" placeholder="例：英文を1つ音読する" /></label>
-            <label>やること 3<input id="taskPlanPoint3" type="text" maxlength="100" placeholder="例：学習記録をつける" /></label>
-            <button class="post-button" type="submit">実行案を保存</button>
-            <div id="taskPlanStatus" class="task-form-status"></div>
-          </form>
-
-          <div class="task-search-row">
-            <input id="taskPlanSearch" class="task-search-input" type="text" placeholder="実行案を検索" />
-          </div>
-          <div id="taskPlanList" class="task-plan-list"></div>
+      <section class="page-intro-card task-setting-hero">
+        <div>
+          <h2>実行案からタスクを選ぶ</h2>
+          <p>作成済みの実行案を見ながら、自分のタスクとして保存できます。</p>
         </div>
-
-        <aside id="taskDetailPanel" class="task-detail-panel">
-          <div class="empty-state"><p>実行案を選ぶと詳細が表示されるよ。</p></div>
-        </aside>
+        <label class="task-search-box">実行案を検索
+          <input id="planSearchInput" type="text" placeholder="例：学習、進路、生活" />
+        </label>
       </section>
 
-      <section class="task-saved-section">
-        <div class="task-section-head">
+      <div class="task-setting-layout">
+        <section>
+          <div id="taskPlansSelectList" class="plans-list"></div>
+        </section>
+
+        <aside id="taskSettingDetailPanel" class="detail-panel">
+          <div class="detail-empty">実行案を選ぶと詳細が表示されます。</div>
+        </aside>
+      </div>
+
+      <section class="saved-section">
+        <div class="saved-header">
           <h2>保存済みタスク</h2>
-          <button id="taskReloadBtn" type="button" class="icon-btn">再読み込み</button>
+          <button id="reloadSavedTasksBtn" class="sub-btn" type="button">再読み込み</button>
         </div>
-        <div id="userTasksList" class="task-saved-list"></div>
+        <div id="savedTasksList" class="saved-tasks-list"></div>
       </section>
     </main>
   </div>
-
+  <!-- アカウントモーダル -->
   <div id="accountModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -97,6 +88,7 @@
           <button class="account-tab" data-mode="register">新規登録</button>
         </div>
 
+        <!-- ログイン -->
         <div id="accountLoginView">
           <label>メール<input id="loginHandleInput" type="email" /></label>
           <label>パスワード<input id="loginPasswordInput" type="password" /></label>
@@ -104,18 +96,44 @@
           <div id="loginError" class="account-error"></div>
         </div>
 
+        <!-- 新規登録 -->
         <div id="accountRegisterView" class="hidden">
           <label>名前<input id="regNameInput" type="text" /></label>
-          <label>ハンドル<input id="regHandleInput" type="text" /></label>
+          <label>ハンドル（@なし）<input id="regHandleInput" type="text" /></label>
           <label>メール<input id="regEmailInput" type="email" /></label>
-          <label>アイコン絵文字<input id="regAvatarInput" type="text" placeholder="🧑‍💻" /></label>
+          <label>絵文字<input id="regAvatarInput" type="text" placeholder="🎣" /></label>
           <label>パスワード<input id="regPasswordInput" type="password" /></label>
-          <button class="primary" id="registerSubmitBtn">登録</button>
+          <button class="primary" id="registerSubmitBtn">アカウント作成</button>
           <div id="registerError" class="account-error"></div>
         </div>
       </div>
     </div>
   </div>
+
+
+  <!-- ボトムナビ（スマホ） -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bottom-nav-item active">
+      <span class="icon">🏠</span><span>ホーム</span>
+    </a>
+    <a href="messages.html" class="bottom-nav-item">
+      <span class="icon">💬</span><span>メッセージ</span>
+    </a>
+    <a href="notifications.html" class="bottom-nav-item">
+      <span class="icon notif-wrap">
+        🔔
+        <span class="notif-dot" data-notif-dot></span>
+      </span>
+      <span>通知</span>
+    </a>
+    <a href="profile.html" class="bottom-nav-item">
+      <span class="icon">👤</span><span>プロフィール</span>
+    </a>
+    <button type="button" class="bottom-nav-item" id="switchAccountBtnMobile">
+      <span class="icon">🔑</span><span>アカウント</span>
+    </button>
+  </nav>
+
 
   <script src="script.js"></script>
 </body>
