@@ -20,8 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let presenceChannel = null;
   let onlineSet = new Set();
 
-  let replyingTweetId = null;
-
   // =====================================
   // DOM helpers
   // =====================================
@@ -29,43 +27,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
   const byId = (id) => document.getElementById(id);
 
-  // =====================================
-  // MBTI
-  // =====================================
-  const MBTI_LIST = [
-    "", // 未設定
-    "INTJ","INTP","ENTJ","ENTP",
-    "INFJ","INFP","ENFJ","ENFP",
-    "ISTJ","ISFJ","ESTJ","ESFJ",
-    "ISTP","ISFP","ESTP","ESFP",
-  ];
+  // 共通
+  const tweetsContainer =
+    byId("tweetsContainer") ||
+    byId("timelinePosts") ||
+    byId("postsContainer") ||
+    (page === "home" ? document.querySelector("main.timeline .posts") : null);
 
-  function fillMbtiSelect(selectEl, value) {
-    if (!selectEl) return;
+  const profileTweetsContainer = byId("profileTweetsContainer");
+  const notificationsContainer = byId("notificationsContainer");
 
-    if (selectEl.options && selectEl.options.length > 0) return;
-
-    MBTI_LIST.forEach((mbti) => {
-      const opt = document.createElement("option");
-      opt.value = mbti;
-      opt.textContent = mbti ? mbti : "未設定";
-      selectEl.appendChild(opt);
-    });
-
-    if (value !== undefined && value !== null) {
-      selectEl.value = value;
-    }
-  }
-
-  // =====================================
-  // Important DOM
-  // =====================================
-  // account summary
+  // アカウント表示
   const currentUserNameEl = byId("currentUserName");
   const currentUserHandleEl = byId("currentUserHandle");
   const currentUserAvatarEl = byId("currentUserAvatar");
 
-  // account modal
+  // アカウントモーダル
   const accountModal = byId("accountModal");
   const switchAccountBtn = byId("switchAccountBtn");
   const switchAccountBtnMobile = byId("switchAccountBtnMobile");
@@ -75,13 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const accountLoginView = byId("accountLoginView");
   const accountRegisterView = byId("accountRegisterView");
 
-  // register / login
+  // 登録/ログイン
   const regNameInput = byId("regNameInput");
   const regHandleInput = byId("regHandleInput");
   const regEmailInput = byId("regEmailInput");
   const regAvatarInput = byId("regAvatarInput");
   const regPasswordInput = byId("regPasswordInput");
-  const regMbtiSelect = byId("regMbtiSelect");
   const registerError = byId("registerError");
   const registerSubmitBtn = byId("registerSubmitBtn");
 
@@ -92,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const logoutBtn = byId("logoutBtn");
 
-  // tweet composer (inline)
+  // ツイート投稿
   const tweetInput = byId("tweetInput");
   const charCounter = byId("charCounter");
   const imageSelectBtn = byId("imageSelectBtn");
@@ -100,55 +76,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const imagePreview = byId("imagePreview");
   const postTweetBtn = byId("postTweetBtn");
 
-  // tweet composer (modal)
-  const openModalBtn = byId("openModalBtn");
-  const tweetModal = byId("tweetModal");
-  const closeModalBtn = byId("closeModalBtn");
-
-  const tweetInputModal = byId("tweetInputModal");
-  const charCounterModal = byId("charCounterModal");
-  const imageSelectBtnModal = byId("imageSelectBtnModal");
-  const imageInputModal = byId("imageInputModal");
-  const imagePreviewModal = byId("imagePreviewModal");
-  const postTweetBtnModal = byId("postTweetBtnModal");
-
-  const composerAvatar = byId("composerAvatar");
-  const composerAvatarModal = byId("composerAvatarModal");
-
-  // reply modal (index.html仕様)
+  // 返信モーダル（任意）
   const replyModal = byId("replyModal");
-  const closeReplyModalBtn = byId("closeReplyModalBtn");
-  const replyInput = byId("replyInput") || byId("replyTextarea");
-  const replyCounter = byId("replyCounter") || byId("replyCharCounter");
-  const replyPostBtn = byId("replyPostBtn") || byId("replySubmitBtn");
-  const replyAvatar = byId("replyAvatar");
+  const replyTextarea = byId("replyTextarea");
+  const replyCharCounter = byId("replyCharCounter");
+  const replySubmitBtn = byId("replySubmitBtn");
+  const replyCancelBtn = byId("replyCancelBtn");
+  let replyingTweetId = null;
 
-  // profile
+  // プロフィール
   const profileNameEl = byId("profileName");
   const profileHandleEl = byId("profileHandle");
   const profileBioEl = byId("profileBio") || $(".profile-bio");
   const profileAvatarEl = byId("profileAvatar") || $(".profile-avatar");
-
   const editProfileBtn = byId("editProfileBtn");
   const dmFromProfileBtn = byId("dmFromProfileBtn");
 
-  const profileTweetsContainer = byId("profileTweetsContainer");
-  const tweetsContainer =
-    byId("tweetsContainer") ||
-    byId("timelinePosts") ||
-    byId("postsContainer") ||
-    (page === "home" ? document.querySelector("main.timeline .posts") : null);
-
-  const notificationsContainer = byId("notificationsContainer");
-
-  // profile edit modal
+  // プロフィール編集（IDがページで違うことがあるので両対応）
   const editProfileModal = byId("editProfileModal");
-  const closeEditProfileModalBtn = byId("closeEditProfileModalBtn") || byId("closeEditProfileModal");
+  const closeEditProfileModalBtn =
+    byId("closeEditProfileModalBtn") || byId("closeEditProfileModal");
   const editProfileNameInput = byId("editProfileName") || byId("editNameInput");
-  const editProfileHandleInput = byId("editProfileHandle") || byId("editHandleInput");
-  const editProfileAvatarInput = byId("editProfileAvatar") || byId("editAvatarInput");
+  const editProfileHandleInput =
+    byId("editProfileHandle") || byId("editHandleInput");
+  const editProfileAvatarInput =
+    byId("editProfileAvatar") || byId("editAvatarInput");
   const editProfileBioTextarea = byId("editProfileBio") || byId("editBioInput");
-  const editProfileMbtiSelect = byId("editProfileMbti");
   const editProfileSaveBtn = byId("editProfileSaveBtn") || byId("saveProfileBtn");
 
   // DM
@@ -160,6 +113,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const dmPartnerNameEl = byId("dmPartnerName");
   const dmPartnerHandleEl = byId("dmPartnerHandle");
   const dmPartnerAvatarEl = byId("dmPartnerAvatar");
+
+  // タスク設定
+  const taskPlanForm = byId("taskPlanForm");
+  const taskPlanCategoryInput = byId("taskPlanCategory");
+  const taskPlanTitleInput = byId("taskPlanTitle");
+  const taskPlanExcerptInput = byId("taskPlanExcerpt");
+  const taskPlanDetailInput = byId("taskPlanDetail");
+  const taskPlanThumbnailInput = byId("taskPlanThumbnail");
+  const taskPlanPoint1Input = byId("taskPlanPoint1");
+  const taskPlanPoint2Input = byId("taskPlanPoint2");
+  const taskPlanPoint3Input = byId("taskPlanPoint3");
+  const taskPlanStatusEl = byId("taskPlanStatus");
+  const taskPlanListEl = byId("taskPlanList");
+  const taskPlanSearchInput = byId("taskPlanSearch");
+  const taskDetailPanelEl = byId("taskDetailPanel");
+  const userTasksListEl = byId("userTasksList");
+  const taskReloadBtn = byId("taskReloadBtn");
+
+  let taskPlans = [];
+  let selectedTaskPlanId = null;
 
   // =====================================
   // Utils
@@ -196,15 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
     counter.textContent = `${input.value.length} / 140`;
   }
 
-  function setNameWithMbti(el, name, mbti) {
-    if (!el) return;
-    const safeName = escapeHTML(name || "ユーザー");
-    const safeMbti = escapeHTML(mbti || "");
-    el.innerHTML = safeMbti
-      ? `${safeName} <span class="mbti-badge">${safeMbti}</span>`
-      : safeName;
-  }
-
   function applyUserUI(user, profile) {
     const name =
       profile?.name ||
@@ -214,21 +178,15 @@ document.addEventListener("DOMContentLoaded", () => {
       profile?.handle || user?.user_metadata?.handle || (user ? "user" : "");
     const avatar = profile?.avatar || user?.user_metadata?.avatar || "🧑‍💻";
     const bio = profile?.bio || "プロフィールはまだ書かれていません";
-    const mbti = profile?.mbti || user?.user_metadata?.mbti || "";
 
-    setNameWithMbti(currentUserNameEl, name, mbti);
+    if (currentUserNameEl) currentUserNameEl.textContent = name;
     if (currentUserHandleEl) currentUserHandleEl.textContent = user ? "@" + handle : "";
     if (currentUserAvatarEl) currentUserAvatarEl.textContent = avatar;
 
-    setNameWithMbti(profileNameEl, name, mbti);
+    if (profileNameEl) profileNameEl.textContent = name;
     if (profileHandleEl) profileHandleEl.textContent = user ? "@" + handle : "@user";
     if (profileBioEl) profileBioEl.textContent = bio;
     if (profileAvatarEl) profileAvatarEl.textContent = avatar;
-
-    // composer avatars
-    if (composerAvatar) composerAvatar.textContent = avatar;
-    if (composerAvatarModal) composerAvatarModal.textContent = avatar;
-    if (replyAvatar) replyAvatar.textContent = avatar;
   }
 
   // =====================================
@@ -236,7 +194,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // =====================================
   async function loadAuthState() {
     const { data, error } = await supabaseClient.auth.getUser();
-    if (error || !data?.user) {
+    if (error) {
+      console.error("getUser error:", error);
+      currentUser = null;
+      currentProfile = null;
+      applyUserUI(null, null);
+      return;
+    }
+    if (!data?.user) {
       currentUser = null;
       currentProfile = null;
       applyUserUI(null, null);
@@ -247,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const { data: profileData, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("id,name,handle,avatar,bio,mbti")
+      .select("id,name,handle,avatar,bio")
       .eq("id", currentUser.id)
       .maybeSingle();
 
@@ -285,7 +250,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const handle = regHandleInput.value.trim();
     const email = regEmailInput.value.trim();
     const avatar = (regAvatarInput?.value.trim() || "🧑‍💻").trim();
-    const mbti = (regMbtiSelect?.value || "").trim();
     const password = regPasswordInput.value;
 
     if (!name || !handle || !email || !password) {
@@ -297,7 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
-      options: { data: { name, handle, avatar, mbti } },
+      options: { data: { name, handle, avatar } },
     });
 
     if (error) {
@@ -320,7 +284,6 @@ document.addEventListener("DOMContentLoaded", () => {
         name,
         handle,
         avatar,
-        mbti: mbti || null,
       });
       if (profileErr) console.warn("profiles upsert warn:", profileErr);
     }
@@ -360,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (missing.length > 0) {
       const { data, error } = await supabaseClient
         .from("profiles")
-        .select("id,name,handle,avatar,bio,mbti")
+        .select("id,name,handle,avatar,bio")
         .in("id", missing);
 
       if (!error && data) data.forEach((p) => profilesCache.set(p.id, p));
@@ -374,13 +337,12 @@ document.addEventListener("DOMContentLoaded", () => {
           handle: "user",
           avatar: "🧑‍💻",
           bio: "",
-          mbti: "",
         }
     );
   }
 
   // =====================================
-  // Tweets (Home / Profile)
+  // Tweets (Home)
   // =====================================
   function renderTweet(row, options = {}) {
     if (!tweetsContainer) return;
@@ -392,18 +354,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = row.name || "ユーザー";
     const handle = row.handle || "user";
     const avatar = row.avatar || "🧑‍💻";
-    const mbti = row.mbti || "";
     const isMine = currentUser && row.user_id === currentUser.id;
-
-    const nameHTML = mbti
-      ? `${escapeHTML(name)} <span class="mbti-badge">${escapeHTML(mbti)}</span>`
-      : escapeHTML(name);
 
     article.innerHTML = `
       <div class="post-avatar" data-profile-uid="${escapeHTML(row.user_id)}">${escapeHTML(avatar)}</div>
       <div class="post-body">
         <div class="post-header">
-          <span class="post-name" data-profile-uid="${escapeHTML(row.user_id)}">${nameHTML}</span>
+          <span class="post-name" data-profile-uid="${escapeHTML(row.user_id)}">${escapeHTML(name)}</span>
           <span class="post-handle" data-profile-uid="${escapeHTML(row.user_id)}">@${escapeHTML(handle)}</span>
           <span class="post-time">${formatTime(row.created_at)}</span>
         </div>
@@ -432,17 +389,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = replyRow.name || "ユーザー";
     const handle = replyRow.handle || "user";
     const avatar = replyRow.avatar || "🧑‍💻";
-    const mbti = replyRow.mbti || "";
-
-    const nameHTML = mbti
-      ? `${escapeHTML(name)} <span class="mbti-badge">${escapeHTML(mbti)}</span>`
-      : escapeHTML(name);
 
     div.innerHTML = `
       <div class="reply-avatar" data-profile-uid="${escapeHTML(replyRow.user_id)}">${escapeHTML(avatar)}</div>
       <div class="reply-body">
         <div class="reply-header">
-          <span class="reply-name" data-profile-uid="${escapeHTML(replyRow.user_id)}">${nameHTML}</span>
+          <span class="reply-name" data-profile-uid="${escapeHTML(replyRow.user_id)}">${escapeHTML(name)}</span>
           <span class="reply-handle" data-profile-uid="${escapeHTML(replyRow.user_id)}">@${escapeHTML(handle)}</span>
           <span class="reply-time">${formatTime(replyRow.created_at)}</span>
         </div>
@@ -492,8 +444,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // render tweets
     tweets.forEach((t) => {
+      const likeUsers = likesByTweet.get(t.id) || [];
       renderTweet(t, {
-        likeCount: (likesByTweet.get(t.id) || []).length,
+        likeCount: likeUsers.length,
         likedByMe: likedByMeSet.has(t.id),
       });
     });
@@ -518,21 +471,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function createTweet(text) {
     if (!currentUser) {
-      alert("ログイン、または新規登録してください");
+      alert("ログインしてから投稿してね🥺");
       return;
     }
 
     const name = currentProfile?.name || currentUser.user_metadata?.name || "ユーザー";
     const handle = currentProfile?.handle || currentUser.user_metadata?.handle || "user";
     const avatar = currentProfile?.avatar || currentUser.user_metadata?.avatar || "🧑‍💻";
-    const mbti = currentProfile?.mbti || currentUser.user_metadata?.mbti || "";
 
     const { error } = await supabaseClient.from("tweets").insert({
       user_id: currentUser.id,
       name,
       handle,
       avatar,
-      mbti: mbti || null,
       content: text,
     });
 
@@ -541,17 +492,15 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("接続エラー");
       return;
     }
-
-    if (page === "home") await loadTweetsFromDB();
-    if (page === "profile") await loadProfilePage();
+    await loadTweetsFromDB();
   }
 
-  async function handlePostFrom(input, counter, preview, closeAfter) {
+  async function handlePostFrom(input, counter, preview) {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
     if (text.length > 140) {
-      alert("文字数制限");
+      alert("文字数制限です。");
       return;
     }
 
@@ -559,7 +508,6 @@ document.addEventListener("DOMContentLoaded", () => {
     input.value = "";
     if (counter) updateCounter(input, counter);
     if (preview) preview.innerHTML = "";
-    if (typeof closeAfter === "function") closeAfter();
   }
 
   // ✅ 投稿削除
@@ -569,6 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ok = confirm("削除しますか？");
     if (!ok) return;
 
+    // 外部キーCASCADEが無い場合の保険
     await supabaseClient.from("tweet_likes").delete().eq("tweet_id", tweetId);
     await supabaseClient.from("tweet_replies").delete().eq("tweet_id", tweetId);
 
@@ -589,29 +538,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =====================================
-  // Reply
+  // Reply UI
   // =====================================
   function openReplyUI(tweetId) {
     replyingTweetId = tweetId;
-    if (!replyModal || !replyInput || !replyCounter) {
-      const text = prompt("返信内容を入力してください");
+    if (replyModal && replyTextarea && replyCharCounter) {
+      replyTextarea.value = "";
+      updateCounter(replyTextarea, replyCharCounter);
+      openModal(replyModal);
+      replyTextarea.focus();
+    } else {
+      const text = prompt("返信内容を入力してね");
       if (text && text.trim()) handleReplySubmit(tweetId, text.trim());
-      return;
     }
-
-    replyInput.value = "";
-    updateCounter(replyInput, replyCounter);
-    openModal(replyModal);
-    replyInput.focus();
   }
 
   async function handleReplySubmit(tweetId, textFromModal) {
     if (!currentUser) {
-      alert("ログインまたは新規登録してください");
+      alert("ログインしてください");
       return;
     }
 
-    const text = textFromModal ?? replyInput?.value?.trim() ?? "";
+    const text = textFromModal ?? replyTextarea?.value?.trim() ?? "";
     if (!text) return;
     if (text.length > 140) {
       alert("文字数制限");
@@ -621,7 +569,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = currentProfile?.name || currentUser.user_metadata?.name || "ユーザー";
     const handle = currentProfile?.handle || currentUser.user_metadata?.handle || "user";
     const avatar = currentProfile?.avatar || currentUser.user_metadata?.avatar || "🧑‍💻";
-    const mbti = currentProfile?.mbti || currentUser.user_metadata?.mbti || "";
 
     const { data, error } = await supabaseClient
       .from("tweet_replies")
@@ -631,7 +578,6 @@ document.addEventListener("DOMContentLoaded", () => {
         name,
         handle,
         avatar,
-        mbti: mbti || null,
         content: text,
       })
       .select("*")
@@ -645,9 +591,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderReply(data);
     if (replyModal) closeModal(replyModal);
-    if (replyInput && replyCounter) {
-      replyInput.value = "";
-      updateCounter(replyInput, replyCounter);
+    if (replyTextarea && replyCharCounter) {
+      replyTextarea.value = "";
+      updateCounter(replyTextarea, replyCharCounter);
     }
   }
 
@@ -656,7 +602,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =====================================
   async function toggleLike(tweetId, btn) {
     if (!currentUser) {
-      alert("ログイン、または新規登録してください");
+      alert("ログインしてください");
       return;
     }
 
@@ -701,11 +647,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =====================================
-  // DM Read
+  // DM 既読（重要）
   // =====================================
   async function markThreadAsRead(partnerId) {
     if (!currentUser || !partnerId) return;
 
+    // 自分が受け取った(相手→自分) 未読だけ既読化
     const { error } = await supabaseClient
       .from("messages")
       .update({ is_read: true })
@@ -714,6 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .eq("is_read", false);
 
     if (error) {
+      // RLSでupdate許可してないとここで死ぬ
       console.warn("markThreadAsRead warn:", error);
       return;
     }
@@ -742,6 +690,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // partnerごとに最新
     const latestByPartner = new Map();
     (data || []).forEach((dm) => {
       const partnerId =
@@ -773,8 +722,9 @@ document.addEventListener("DOMContentLoaded", () => {
       item.className = "dm-conversation-item" + (isActive ? " active" : "");
       item.dataset.partnerUid = pid;
 
+      // 未読なら●（CSSは好きに）
       const unreadDot = isUnreadFromPartner
-        ? `<span class="dm-unread-dot"></span>`
+        ? `<span class="dm-unread-dot" style="display:inline-block;width:8px;height:8px;border-radius:99px;background:var(--green-main);margin-left:6px;"></span>`
         : "";
 
       item.innerHTML = `
@@ -796,11 +746,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const div = document.createElement("div");
     div.className = "dm-message " + (isMe ? "me" : "other");
 
+    // 自分のメッセージだけ status 表示
     div.innerHTML = `
       <div class="dm-message-text">${escapeHTML(dm.content || "")}</div>
       <div class="dm-message-time">
         ${formatTime(dm.created_at)}
-        ${isMe ? `<span class="dm-message-status">${status}</span>` : ""}
+        ${isMe ? `<span class="dm-message-status" style="margin-left:6px; font-size:11px; color:var(--text-sub);">${status}</span>` : ""}
       </div>
     `;
     return div;
@@ -874,7 +825,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function subscribeMessagesRealtime() {
     if (!currentUser) return;
 
-    try { rtChannel?.unsubscribe?.(); } catch (_) {}
+    // 古いチャンネル掃除
+    try {
+      rtChannel?.unsubscribe?.();
+    } catch (_) {}
 
     rtChannel = supabaseClient
       .channel("rt-messages")
@@ -908,7 +862,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupPresence() {
     if (!currentUser) return;
 
-    try { presenceChannel?.unsubscribe?.(); } catch (_) {}
+    try {
+      presenceChannel?.unsubscribe?.();
+    } catch (_) {}
 
     presenceChannel = supabaseClient.channel("presence-global", {
       config: { presence: { key: currentUser.id } },
@@ -943,27 +899,372 @@ document.addEventListener("DOMContentLoaded", () => {
     badge.textContent = onlineSet.has(currentDMPartnerId) ? "オンライン" : "オフライン";
   }
 
-  // Unread
-  async function refreshUnreadDMIndicator() {
-    if (!currentUser) return;
+  // 未読ドット
+ async function refreshUnreadDMIndicator() {
+  if (!currentUser) return;
 
-    const dots = document.querySelectorAll("[data-notif-dot]");
-    if (dots.length === 0) return;
+  const dots = document.querySelectorAll("[data-notif-dot]");
+  if (dots.length === 0) return;
 
-    const { count, error } = await supabaseClient
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("to_user_id", currentUser.id)
-      .eq("is_read", false);
+  const { count, error } = await supabaseClient
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("to_user_id", currentUser.id)
+    .eq("is_read", false);
 
-    if (error) {
-      console.error("unread dm count error:", error);
+  if (error) {
+    console.error("unread dm count error:", error);
+    return;
+  }
+
+  dots.forEach((dot) => {
+    dot.classList.toggle("show", (count || 0) > 0);
+  });
+}
+
+
+
+  // =====================================
+  // Task setting
+  // =====================================
+  function escapeAttr(str) {
+    return escapeHTML(str).replaceAll("`", "&#96;");
+  }
+
+  function getTaskPlanPointsFromInputs() {
+    return [taskPlanPoint1Input?.value, taskPlanPoint2Input?.value, taskPlanPoint3Input?.value]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean);
+  }
+
+  function setTaskPlanStatus(message, type = "") {
+    if (!taskPlanStatusEl) return;
+    taskPlanStatusEl.textContent = message || "";
+    taskPlanStatusEl.className = "task-form-status" + (type ? ` ${type}` : "");
+  }
+
+  function getFilteredTaskPlans() {
+    const keyword = (taskPlanSearchInput?.value || "").trim().toLowerCase();
+    if (!keyword) return taskPlans;
+    return taskPlans.filter((plan) => {
+      const points = Array.isArray(plan.points) ? plan.points.join(" ") : "";
+      const text = `${plan.category || ""} ${plan.title || ""} ${plan.excerpt || ""} ${plan.detail || ""} ${points}`.toLowerCase();
+      return text.includes(keyword);
+    });
+  }
+
+  function renderTaskPlans() {
+    if (!taskPlanListEl) return;
+
+    const filtered = getFilteredTaskPlans();
+    if (!filtered.some((plan) => String(plan.id) === String(selectedTaskPlanId))) {
+      selectedTaskPlanId = filtered[0]?.id || null;
+    }
+
+    if (!filtered.length) {
+      taskPlanListEl.innerHTML = `<div class="empty-state"><p>まだ実行案がありません。上のフォームから追加してね。</p></div>`;
+      renderTaskDetail();
       return;
     }
 
-    dots.forEach((dot) => {
-      dot.classList.toggle("show", (count || 0) > 0);
+    taskPlanListEl.innerHTML = filtered
+      .map((plan) => {
+        const isActive = String(plan.id) === String(selectedTaskPlanId);
+        return `
+          <article class="task-plan-card ${isActive ? "active" : ""}" data-task-plan-id="${escapeAttr(plan.id)}">
+            <div class="task-plan-thumb-wrap">
+              <img class="task-plan-thumb" src="${escapeAttr(plan.thumbnail || "https://placehold.co/720x480?text=StepLink")}" alt="${escapeAttr(plan.title || "実行案")}" />
+              <span class="task-plan-category">${escapeHTML(plan.category || "未分類")}</span>
+            </div>
+            <div class="task-plan-body">
+              <h3>${escapeHTML(plan.title || "無題")}</h3>
+              <p>${escapeHTML(plan.excerpt || "説明はまだありません")}</p>
+              <div class="task-plan-meta">
+                <span>詳細を見る</span>
+                <button type="button" class="icon-btn task-plan-delete-btn" data-task-plan-delete-id="${escapeAttr(plan.id)}">削除</button>
+              </div>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+
+    taskPlanListEl.querySelectorAll(".task-plan-card").forEach((card) => {
+      card.addEventListener("click", (e) => {
+        if (e.target.closest(".task-plan-delete-btn")) return;
+        selectedTaskPlanId = card.dataset.taskPlanId;
+        renderTaskPlans();
+      });
     });
+
+    taskPlanListEl.querySelectorAll(".task-plan-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const planId = btn.dataset.taskPlanDeleteId;
+        if (planId) await deleteTaskPlan(planId);
+      });
+    });
+
+    renderTaskDetail();
+  }
+
+  function renderTaskDetail() {
+    if (!taskDetailPanelEl) return;
+
+    const plan = taskPlans.find((item) => String(item.id) === String(selectedTaskPlanId));
+    if (!plan) {
+      taskDetailPanelEl.innerHTML = `<div class="empty-state"><p>実行案を選ぶと、ここに詳細と保存フォームが出るよ。</p></div>`;
+      return;
+    }
+
+    const points = Array.isArray(plan.points) ? plan.points.filter(Boolean) : [];
+    taskDetailPanelEl.innerHTML = `
+      <img class="task-detail-thumb" src="${escapeAttr(plan.thumbnail || "https://placehold.co/720x480?text=StepLink")}" alt="${escapeAttr(plan.title || "実行案")}" />
+      <div class="task-detail-body">
+        <span class="task-detail-badge">${escapeHTML(plan.category || "未分類")}</span>
+        <h2>${escapeHTML(plan.title || "無題")}</h2>
+        <p class="task-detail-text">${escapeHTML(plan.detail || plan.excerpt || "説明はまだありません")}</p>
+        <div class="task-points">
+          ${points.map((point) => `<div class="task-point-item"><span class="task-point-dot"></span><span>${escapeHTML(point)}</span></div>`).join("") || `<div class="task-point-item"><span class="task-point-dot"></span><span>やることはまだ未設定</span></div>`}
+        </div>
+        <form id="userTaskForm" class="task-user-form">
+          <label>タスク名<input id="userTaskTitle" type="text" maxlength="100" value="${escapeAttr(plan.title || "")}" required /></label>
+          <label>期限<input id="userTaskDueDate" type="date" /></label>
+          <label>メモ<textarea id="userTaskMemo" maxlength="1000" placeholder="このタスクでやる内容や目標を書く"></textarea></label>
+          <div class="task-user-actions">
+            <button type="submit" class="post-button task-submit-btn">このタスクを保存</button>
+            <button type="button" class="icon-btn" id="fillTaskSampleBtn">サンプル入力</button>
+          </div>
+          <div id="userTaskStatus" class="task-form-status"></div>
+        </form>
+      </div>
+    `;
+
+    const userTaskForm = byId("userTaskForm");
+    const fillTaskSampleBtn = byId("fillTaskSampleBtn");
+    const userTaskMemo = byId("userTaskMemo");
+
+    if (fillTaskSampleBtn && userTaskMemo) {
+      fillTaskSampleBtn.addEventListener("click", () => {
+        const text = points.length
+          ? `やること:\n- ${points.join("\n- ")}\n\nまずは小さく始める。`
+          : "まずはこの実行案を試してみる。";
+        userTaskMemo.value = text;
+      });
+    }
+
+    if (userTaskForm) {
+      userTaskForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await createUserTask(plan);
+      });
+    }
+  }
+
+  async function loadTaskPlans() {
+    if (!taskPlanListEl) return;
+    if (!currentUser) {
+      taskPlans = [];
+      selectedTaskPlanId = null;
+      taskPlanListEl.innerHTML = `<div class="empty-state"><p>ログインすると実行案を作れるよ。</p></div>`;
+      if (taskDetailPanelEl) taskDetailPanelEl.innerHTML = `<div class="empty-state"><p>ログインして実行案を追加してね。</p></div>`;
+      return;
+    }
+
+    taskPlanListEl.innerHTML = `<div class="empty-state"><p>実行案を読み込み中...</p></div>`;
+
+    const { data, error } = await supabaseClient
+      .from("task_plans")
+      .select("id,user_id,category,title,excerpt,detail,thumbnail,points,created_at")
+      .eq("user_id", currentUser.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("task plans load error:", error);
+      taskPlanListEl.innerHTML = `<div class="empty-state"><p>実行案の読み込みに失敗しました。</p></div>`;
+      if (taskDetailPanelEl) taskDetailPanelEl.innerHTML = `<div class="empty-state"><p>${escapeHTML(error.message || "読み込みエラー")}</p></div>`;
+      return;
+    }
+
+    taskPlans = (data || []).map((plan) => ({
+      ...plan,
+      points: Array.isArray(plan.points) ? plan.points : [],
+    }));
+    selectedTaskPlanId = taskPlans[0]?.id || null;
+    renderTaskPlans();
+  }
+
+  async function createTaskPlan() {
+    if (!currentUser) {
+      setTaskPlanStatus("ログインしてから実行案を追加してね。", "error");
+      return;
+    }
+
+    const category = taskPlanCategoryInput?.value.trim() || "";
+    const title = taskPlanTitleInput?.value.trim() || "";
+    const excerpt = taskPlanExcerptInput?.value.trim() || "";
+    const detail = taskPlanDetailInput?.value.trim() || "";
+    const thumbnail = taskPlanThumbnailInput?.value.trim() || "";
+    const points = getTaskPlanPointsFromInputs();
+
+    if (!category || !title || !excerpt || !detail) {
+      setTaskPlanStatus("カテゴリ・タイトル・短い説明・詳細説明は必須だよ。", "error");
+      return;
+    }
+
+    setTaskPlanStatus("保存中...");
+
+    const { error } = await supabaseClient.from("task_plans").insert({
+      user_id: currentUser.id,
+      category,
+      title,
+      excerpt,
+      detail,
+      thumbnail: thumbnail || null,
+      points,
+    });
+
+    if (error) {
+      console.error("task plan insert error:", error);
+      setTaskPlanStatus(`保存に失敗しました: ${error.message}`, "error");
+      return;
+    }
+
+    if (taskPlanForm) taskPlanForm.reset();
+    setTaskPlanStatus("実行案を追加したよ。", "success");
+    await loadTaskPlans();
+  }
+
+  async function deleteTaskPlan(planId) {
+    if (!currentUser || !planId) return;
+
+    const { error } = await supabaseClient
+      .from("task_plans")
+      .delete()
+      .eq("id", planId)
+      .eq("user_id", currentUser.id);
+
+    if (error) {
+      console.error("task plan delete error:", error);
+      alert(`実行案の削除に失敗: ${error.message}`);
+      return;
+    }
+
+    await loadTaskPlans();
+  }
+
+  async function createUserTask(plan) {
+    if (!currentUser || !plan) return;
+
+    const statusEl = byId("userTaskStatus");
+    const title = byId("userTaskTitle")?.value.trim() || "";
+    const dueDate = byId("userTaskDueDate")?.value || null;
+    const memo = byId("userTaskMemo")?.value.trim() || "";
+
+    if (!title) {
+      if (statusEl) {
+        statusEl.textContent = "タスク名を入力してね。";
+        statusEl.className = "task-form-status error";
+      }
+      return;
+    }
+
+    if (statusEl) {
+      statusEl.textContent = "保存中...";
+      statusEl.className = "task-form-status";
+    }
+
+    const { error } = await supabaseClient.from("user_tasks").insert({
+      user_id: currentUser.id,
+      plan_id: String(plan.id),
+      plan_category: plan.category || null,
+      plan_title: plan.title || title,
+      custom_title: title,
+      due_date: dueDate,
+      memo,
+      status: "todo",
+    });
+
+    if (error) {
+      console.error("user task insert error:", error);
+      if (statusEl) {
+        statusEl.textContent = `保存失敗: ${error.message}`;
+        statusEl.className = "task-form-status error";
+      }
+      return;
+    }
+
+    if (statusEl) {
+      statusEl.textContent = "タスクを保存したよ。";
+      statusEl.className = "task-form-status success";
+    }
+    await loadUserTasks();
+  }
+
+  async function loadUserTasks() {
+    if (!userTasksListEl) return;
+    if (!currentUser) {
+      userTasksListEl.innerHTML = `<div class="empty-state"><p>ログインすると保存済みタスクが見えるよ。</p></div>`;
+      return;
+    }
+
+    userTasksListEl.innerHTML = `<div class="empty-state"><p>保存済みタスクを読み込み中...</p></div>`;
+
+    const { data, error } = await supabaseClient
+      .from("user_tasks")
+      .select("id,plan_category,plan_title,custom_title,due_date,memo,status,created_at")
+      .eq("user_id", currentUser.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("user tasks load error:", error);
+      userTasksListEl.innerHTML = `<div class="empty-state"><p>保存済みタスクの読み込みに失敗しました。</p></div>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      userTasksListEl.innerHTML = `<div class="empty-state"><p>まだ保存済みタスクはないよ。</p></div>`;
+      return;
+    }
+
+    userTasksListEl.innerHTML = data.map((task) => `
+      <article class="task-saved-card">
+        <div class="task-saved-head">
+          <div>
+            <h3>${escapeHTML(task.custom_title || task.plan_title || "無題")}</h3>
+            <div class="task-saved-meta">カテゴリ: ${escapeHTML(task.plan_category || "未分類")} / 期限: ${escapeHTML(task.due_date || "未設定")} / 状態: ${escapeHTML(task.status || "todo")}</div>
+          </div>
+          <button type="button" class="icon-btn task-delete-btn" data-user-task-id="${escapeAttr(task.id)}">削除</button>
+        </div>
+        ${task.memo ? `<div class="task-saved-note">${escapeHTML(task.memo)}</div>` : ""}
+      </article>
+    `).join("");
+
+    userTasksListEl.querySelectorAll(".task-delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const taskId = btn.dataset.userTaskId;
+        if (!taskId) return;
+        await deleteUserTask(taskId);
+      });
+    });
+  }
+
+  async function deleteUserTask(taskId) {
+    if (!currentUser || !taskId) return;
+
+    const { error } = await supabaseClient
+      .from("user_tasks")
+      .delete()
+      .eq("id", taskId)
+      .eq("user_id", currentUser.id);
+
+    if (error) {
+      console.error("user task delete error:", error);
+      alert(`タスク削除に失敗: ${error.message}`);
+      return;
+    }
+
+    await loadUserTasks();
   }
 
   // =====================================
@@ -980,11 +1281,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const actorName = actorProfile?.name || "ユーザー";
     const actorHandle = actorProfile?.handle || "user";
     const actorAvatar = actorProfile?.avatar || "🧑‍💻";
-    const actorMbti = actorProfile?.mbti || "";
-
-    const actorNameHTML = actorMbti
-      ? `${escapeHTML(actorName)} <span class="mbti-badge">${escapeHTML(actorMbti)}</span>`
-      : escapeHTML(actorName);
 
     let icon = "🔔";
     let title = "通知";
@@ -1020,7 +1316,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="post-avatar" data-profile-uid="${escapeHTML(n.actor_id)}">${escapeHTML(actorAvatar)}</div>
       <div class="post-body">
         <div class="post-header">
-          <span class="post-name" data-profile-uid="${escapeHTML(n.actor_id)}">${actorNameHTML}</span>
+          <span class="post-name" data-profile-uid="${escapeHTML(n.actor_id)}">${escapeHTML(actorName)}</span>
           <span class="post-handle" data-profile-uid="${escapeHTML(n.actor_id)}">@${escapeHTML(actorHandle)}</span>
           <span class="post-time">${formatTime(n.created_at)}</span>
         </div>
@@ -1041,12 +1337,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!notificationsContainer) return;
 
     if (!currentUser) {
-      renderNotificationsEmpty("ログイン、または新規登録してください");
+      renderNotificationsEmpty("ログインしてください");
       return;
     }
 
     notificationsContainer.innerHTML = "";
 
+    // 自分のツイートID
     const { data: myTweets, error: myTweetsErr } = await supabaseClient
       .from("tweets")
       .select("id")
@@ -1084,7 +1381,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // likes
+    // likes（tweet_likesにcreated_atがある前提）
     let likeNotifs = [];
     if (myTweetIds.length > 0) {
       const { data: likes, error: likesErr } = await supabaseClient
@@ -1153,6 +1450,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetUserId = uidParam || currentUser?.id;
     if (!targetUserId) return;
 
+    // 自分/他人でボタン
     if (editProfileBtn) {
       editProfileBtn.style.display =
         currentUser && targetUserId === currentUser.id ? "inline-flex" : "none";
@@ -1165,14 +1463,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const { data: prof, error } = await supabaseClient
       .from("profiles")
-      .select("id,name,handle,avatar,bio,mbti")
+      .select("id,name,handle,avatar,bio")
       .eq("id", targetUserId)
       .maybeSingle();
 
     if (!error && prof) {
       profilesCache.set(targetUserId, prof);
-
-      setNameWithMbti(profileNameEl, prof.name || "ユーザー", prof.mbti || "");
+      if (profileNameEl) profileNameEl.textContent = prof.name || "ユーザー";
       if (profileHandleEl) profileHandleEl.textContent = "@" + (prof.handle || "user");
       if (profileBioEl)
         profileBioEl.textContent = prof.bio || "プロフィールはまだ書かれていません";
@@ -1195,6 +1492,7 @@ document.addEventListener("DOMContentLoaded", () => {
     profileTweetsContainer.innerHTML = "";
     const ids = (tweets || []).map((t) => t.id);
 
+    // likes summary
     const likesByTweet = new Map();
     const likedByMe = new Set();
 
@@ -1220,19 +1518,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = t.name || "ユーザー";
       const handle = t.handle || "user";
       const avatar = t.avatar || "🧑‍💻";
-      const mbti = t.mbti || "";
       const likeUsers = likesByTweet.get(t.id) || [];
       const isMine = currentUser && t.user_id === currentUser.id;
-
-      const nameHTML = mbti
-        ? `${escapeHTML(name)} <span class="mbti-badge">${escapeHTML(mbti)}</span>`
-        : escapeHTML(name);
 
       article.innerHTML = `
         <div class="post-avatar" data-profile-uid="${escapeHTML(t.user_id)}">${escapeHTML(avatar)}</div>
         <div class="post-body">
           <div class="post-header">
-            <span class="post-name" data-profile-uid="${escapeHTML(t.user_id)}">${nameHTML}</span>
+            <span class="post-name" data-profile-uid="${escapeHTML(t.user_id)}">${escapeHTML(name)}</span>
             <span class="post-handle" data-profile-uid="${escapeHTML(t.user_id)}">@${escapeHTML(handle)}</span>
             <span class="post-time">${formatTime(t.created_at)}</span>
           </div>
@@ -1240,7 +1533,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="post-footer">
             <button class="icon-btn reply-btn" data-tweet-id="${t.id}">返信</button>
             <button class="icon-btn like-btn" data-tweet-id="${t.id}">
-              <span class="like-icon">${likedByMe.has(t.id) ? "❤️" : "♡"}</span>
+              <span class="like-icon">${likedByMe.has(t.id) ? "♥" : "♡"}</span>
               <span class="like-count">${likeUsers.length}</span>
             </button>
             ${isMine ? `<button class="icon-btn delete-tweet-btn" data-tweet-id="${t.id}">削除</button>` : ""}
@@ -1251,6 +1544,7 @@ document.addEventListener("DOMContentLoaded", () => {
       profileTweetsContainer.appendChild(article);
     });
 
+    // replies render
     if (ids.length > 0) {
       const { data: replies, error: rErr } = await supabaseClient
         .from("tweet_replies")
@@ -1274,8 +1568,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editProfileAvatarInput) editProfileAvatarInput.value = prof.avatar || "";
     if (editProfileBioTextarea) editProfileBioTextarea.value = prof.bio || "";
 
-    fillMbtiSelect(editProfileMbtiSelect, prof.mbti || "");
-
     openModal(editProfileModal);
   }
 
@@ -1286,7 +1578,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const handle = editProfileHandleInput?.value?.trim() || null;
     const avatar = editProfileAvatarInput?.value?.trim() || null;
     const bio = editProfileBioTextarea?.value?.trim() || null;
-    const mbti = (editProfileMbtiSelect?.value || "").trim() || null;
 
     const { error } = await supabaseClient.from("profiles").upsert({
       id: currentUser.id,
@@ -1294,7 +1585,6 @@ document.addEventListener("DOMContentLoaded", () => {
       handle,
       avatar,
       bio,
-      mbti,
     });
 
     if (error) {
@@ -1303,7 +1593,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    currentProfile = { id: currentUser.id, name, handle, avatar, bio, mbti };
+    currentProfile = { id: currentUser.id, name, handle, avatar, bio };
     profilesCache.set(currentUser.id, currentProfile);
     applyUserUI(currentUser, currentProfile);
     closeModal(editProfileModal);
@@ -1354,10 +1644,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Init wiring
   // =====================================
   async function init() {
-    // MBTI dropdown populate
-    fillMbtiSelect(regMbtiSelect, "");
-
-    // account modal
+    // account modal wiring
     if (switchAccountBtn && accountModal)
       switchAccountBtn.addEventListener("click", () => openModal(accountModal));
     if (switchAccountBtnMobile && accountModal)
@@ -1370,6 +1657,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (registerSubmitBtn) registerSubmitBtn.addEventListener("click", handleRegister);
+    if (taskPlanForm) taskPlanForm.addEventListener("submit", async (e) => { e.preventDefault(); await createTaskPlan(); });
+    if (taskPlanSearchInput) taskPlanSearchInput.addEventListener("input", renderTaskPlans);
+    if (taskReloadBtn) taskReloadBtn.addEventListener("click", loadUserTasks);
     if (loginSubmitBtn) loginSubmitBtn.addEventListener("click", handleLogin);
 
     if (logoutBtn) {
@@ -1379,64 +1669,45 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // tweet modal open/close
-    if (openModalBtn && tweetModal) openModalBtn.addEventListener("click", () => openModal(tweetModal));
-    if (closeModalBtn && tweetModal) closeModalBtn.addEventListener("click", () => closeModal(tweetModal));
-
     // counters
     if (tweetInput && charCounter) {
       updateCounter(tweetInput, charCounter);
       tweetInput.addEventListener("input", () => updateCounter(tweetInput, charCounter));
     }
-    if (tweetInputModal && charCounterModal) {
-      updateCounter(tweetInputModal, charCounterModal);
-      tweetInputModal.addEventListener("input", () => updateCounter(tweetInputModal, charCounterModal));
-    }
-    if (replyInput && replyCounter) {
-      replyInput.addEventListener("input", () => updateCounter(replyInput, replyCounter));
-    }
 
-    // close reply modal
-    if (closeReplyModalBtn) closeReplyModalBtn.addEventListener("click", () => closeModal(replyModal));
+    if (replyTextarea && replyCharCounter) {
+      replyTextarea.addEventListener("input", () => updateCounter(replyTextarea, replyCharCounter));
+    }
+    if (replySubmitBtn) {
+      replySubmitBtn.addEventListener("click", () => {
+        if (!replyingTweetId) return;
+        handleReplySubmit(replyingTweetId);
+      });
+    }
+    if (replyCancelBtn) replyCancelBtn.addEventListener("click", () => closeModal(replyModal));
 
-    // image preview
-    const wireImage = (btn, input, preview) => {
-      if (!btn || !input || !preview) return;
-      btn.addEventListener("click", () => input.click());
-      input.addEventListener("change", () => {
-        const file = input.files?.[0];
+    // image preview (optional)
+    if (imageSelectBtn && imageInput && imagePreview) {
+      imageSelectBtn.addEventListener("click", () => imageInput.click());
+      imageInput.addEventListener("change", () => {
+        const file = imageInput.files?.[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
-          preview.innerHTML = "";
+          imagePreview.innerHTML = "";
           const img = document.createElement("img");
           img.src = ev.target.result;
-          preview.appendChild(img);
+          imagePreview.appendChild(img);
         };
         reader.readAsDataURL(file);
       });
-    };
-    wireImage(imageSelectBtn, imageInput, imagePreview);
-    wireImage(imageSelectBtnModal, imageInputModal, imagePreviewModal);
+    }
 
     // post tweet
     if (postTweetBtn && tweetInput) {
       postTweetBtn.addEventListener("click", () =>
         handlePostFrom(tweetInput, charCounter, imagePreview)
       );
-    }
-    if (postTweetBtnModal && tweetInputModal) {
-      postTweetBtnModal.addEventListener("click", () =>
-        handlePostFrom(tweetInputModal, charCounterModal, imagePreviewModal, () => closeModal(tweetModal))
-      );
-    }
-
-    // reply submit
-    if (replyPostBtn) {
-      replyPostBtn.addEventListener("click", () => {
-        if (!replyingTweetId) return;
-        handleReplySubmit(replyingTweetId);
-      });
     }
 
     // profile edit
@@ -1497,6 +1768,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else if (page === "notifications") {
         await loadNotifications();
+      } else if (page === "task-setting") {
+        await loadTaskPlans();
+        await loadUserTasks();
       }
     } catch (e) {
       console.error("page init error:", e);
