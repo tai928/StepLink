@@ -1841,6 +1841,10 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) {
       console.error("page init error:", e);
     }
+  }
+
+  init();
+});
 
   init();
 });
