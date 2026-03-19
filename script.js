@@ -1283,21 +1283,32 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      list.innerHTML = data.map((plan) => `
-        <article class="saved-task-card">
-          <div class="saved-task-top">
-            <div>
-              <h3 class="saved-task-title">${escapeHTML(plan.title || "")}</h3>
-              <div class="saved-task-meta">
-                カテゴリ: ${escapeHTML(plan.category || "未分類")}<br>
-                作成日: ${formatTaskDate(plan.created_at)}
+      list.innerHTML = data
+        .map((plan) => {
+          const authorName =
+            plan.author_name ||
+            plan.user_name ||
+            plan.name ||
+            "自分";
+
+          return `
+            <article class="saved-task-card">
+              <div class="saved-task-top">
+                <div>
+                  <h3 class="saved-task-title">${escapeHTML(plan.title || "")}</h3>
+                  <div class="saved-task-meta">
+                    カテゴリ: ${escapeHTML(plan.category || "未分類")}<br>
+                    作成者: ${escapeHTML(authorName)}<br>
+                    作成日: ${formatTaskDate(plan.created_at)}
+                  </div>
+                </div>
+                <button class="delete-btn delete-plan-btn" data-plan-id="${plan.id}" type="button">削除</button>
               </div>
-            </div>
-            <button class="delete-btn delete-plan-btn" data-plan-id="${plan.id}" type="button">削除</button>
-          </div>
-          ${plan.excerpt ? `<div class="saved-task-note">${escapeHTML(plan.excerpt)}</div>` : ""}
-        </article>
-      `).join("");
+              ${plan.excerpt ? `<div class="saved-task-note">${escapeHTML(plan.excerpt)}</div>` : ""}
+            </article>
+          `;
+        })
+        .join("");
     }
 
     form.addEventListener("submit", async (e) => {
@@ -1332,6 +1343,10 @@ document.addEventListener("DOMContentLoaded", () => {
           detail,
           thumbnail,
           points,
+          author_name:
+            currentProfile?.name ||
+            currentUser?.user_metadata?.name ||
+            "ユーザー",
         });
 
       if (error) {
@@ -1347,9 +1362,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     list.addEventListener("click", async (e) => {
       const btn = e.target.closest(".delete-plan-btn");
-      if (!btn) return;
-
-      if (!currentUser) return;
+      if (!btn || !currentUser) return;
 
       const planId = btn.dataset.planId;
       const ok = confirm("この実行案を削除しますか？");
@@ -1398,6 +1411,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const points = Array.isArray(plan.points) ? plan.points : [];
+      const authorName =
+        plan.author_name ||
+        plan.user_name ||
+        plan.name ||
+        "ユーザー";
 
       detailPanel.innerHTML = `
         ${plan.thumbnail ? `<img class="detail-thumb" src="${escapeHTML(plan.thumbnail)}" alt="${escapeHTML(plan.title || "")}">` : ""}
@@ -1405,17 +1423,22 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="detail-badge">${escapeHTML(plan.category || "未分類")}</span>
           <h2 class="detail-title">${escapeHTML(plan.title || "")}</h2>
           <p class="detail-text">${escapeHTML(plan.detail || "")}</p>
+          <p class="detail-text" style="margin-top:8px;">作成者: ${escapeHTML(authorName)}</p>
 
           ${
             points.length
               ? `
             <ul class="point-list">
-              ${points.map((point) => `
+              ${points
+                .map(
+                  (point) => `
                 <li>
                   <span class="point-dot"></span>
                   <span>${escapeHTML(point)}</span>
                 </li>
-              `).join("")}
+              `
+                )
+                .join("")}
             </ul>
           `
               : ""
@@ -1455,6 +1478,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!memoInput) return;
         memoInput.value = [
           `実行案: ${plan.title || ""}`,
+          `作成者: ${authorName}`,
           "",
           ...(points.length ? ["やること:", ...points.map((p) => `- ${p}`), ""] : []),
           "まずは小さく始める。",
@@ -1512,6 +1536,7 @@ document.addEventListener("DOMContentLoaded", () => {
           plan.title,
           plan.excerpt,
           plan.detail,
+          plan.author_name,
           ...(Array.isArray(plan.points) ? plan.points : []),
         ]
           .join(" ")
@@ -1530,28 +1555,39 @@ document.addEventListener("DOMContentLoaded", () => {
         selectedPlanId = filtered[0].id;
       }
 
-      plansList.innerHTML = filtered.map((plan) => `
-        <button class="plan-card ${String(plan.id) === String(selectedPlanId) ? "active" : ""}" data-plan-id="${plan.id}" type="button">
-          <div class="plan-inner">
-            <div class="plan-thumb-wrap">
-              ${
-                plan.thumbnail
-                  ? `<img class="plan-thumb" src="${escapeHTML(plan.thumbnail)}" alt="${escapeHTML(plan.title || "")}">`
-                  : `<div class="plan-thumb" style="display:flex;align-items:center;justify-content:center;background:#eef2f6;">📝</div>`
-              }
-              <span class="plan-category">${escapeHTML(plan.category || "未分類")}</span>
-            </div>
-            <div class="plan-content">
-              <h3>${escapeHTML(plan.title || "")}</h3>
-              <p class="plan-excerpt">${escapeHTML(plan.excerpt || "")}</p>
-              <div class="plan-footer">
-                <span class="plan-link">詳細を見る</span>
-                <span class="plan-tag">実行案</span>
+      plansList.innerHTML = filtered
+        .map((plan) => {
+          const authorName =
+            plan.author_name ||
+            plan.user_name ||
+            plan.name ||
+            "ユーザー";
+
+          return `
+            <button class="plan-card ${String(plan.id) === String(selectedPlanId) ? "active" : ""}" data-plan-id="${plan.id}" type="button">
+              <div class="plan-inner">
+                <div class="plan-thumb-wrap">
+                  ${
+                    plan.thumbnail
+                      ? `<img class="plan-thumb" src="${escapeHTML(plan.thumbnail)}" alt="${escapeHTML(plan.title || "")}">`
+                      : `<div class="plan-thumb" style="display:flex;align-items:center;justify-content:center;background:#eef2f6;">📝</div>`
+                  }
+                  <span class="plan-category">${escapeHTML(plan.category || "未分類")}</span>
+                </div>
+                <div class="plan-content">
+                  <h3>${escapeHTML(plan.title || "")}</h3>
+                  <p class="plan-excerpt">${escapeHTML(plan.excerpt || "")}</p>
+                  <div class="saved-task-meta" style="margin-top:8px;">作成者: ${escapeHTML(authorName)}</div>
+                  <div class="plan-footer">
+                    <span class="plan-link">詳細を見る</span>
+                    <span class="plan-tag">実行案</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </button>
-      `).join("");
+            </button>
+          `;
+        })
+        .join("");
 
       plansList.querySelectorAll(".plan-card").forEach((card) => {
         card.addEventListener("click", () => {
@@ -1567,16 +1603,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function loadPlans() {
-      if (!currentUser) {
-        plansList.innerHTML = `<div class="empty-state"><p>ログインすると実行案が表示されます</p></div>`;
-        renderDetail(null);
-        return;
-      }
-
       const { data, error } = await supabaseClient
         .from("task_plans")
         .select("*")
-        .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -1613,7 +1642,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      savedList.innerHTML = data.map((task) => `
+      savedList.innerHTML = data
+        .map(
+          (task) => `
         <article class="saved-task-card">
           <div class="saved-task-top">
             <div>
@@ -1629,10 +1660,11 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           ${task.memo ? `<div class="saved-task-note">${escapeHTML(task.memo)}</div>` : ""}
         </article>
-      `).join("");
+      `
+        )
+        .join("");
     }
 
-    plansList.addEventListener("click", () => {});
     savedList.addEventListener("click", async (e) => {
       const btn = e.target.closest(".delete-user-task-btn");
       if (!btn || !currentUser) return;
