@@ -1709,7 +1709,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tweetId) deleteTweet(tweetId);
       return;
     }
-  }
+  });
 
   // =====================================
   // Init wiring
