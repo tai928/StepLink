@@ -1235,6 +1235,442 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =====================================
+  // Task pages
+  // =====================================
+  function formatTaskDate(dateString) {
+    if (!dateString) return "未設定";
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return dateString;
+    return d.toLocaleDateString("ja-JP");
+  }
+
+  function getTaskPointsFromForm() {
+    return [
+      byId("planPoint1Input")?.value?.trim(),
+      byId("planPoint2Input")?.value?.trim(),
+      byId("planPoint3Input")?.value?.trim(),
+    ].filter(Boolean);
+  }
+
+  async function initTaskPlansPage() {
+    const form = byId("taskPlanForm");
+    const list = byId("taskPlansManageList");
+    const reloadBtn = byId("reloadTaskPlansBtn");
+    const resetBtn = byId("taskPlanResetBtn");
+    const statusEl = byId("taskPlanFormStatus");
+
+    if (!form || !list) return;
+
+    async function loadTaskPlans() {
+      if (!currentUser) {
+        list.innerHTML = `<div class="empty-state"><p>ログインすると実行案が表示されます</p></div>`;
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("task_plans")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("task_plans load error:", error);
+        list.innerHTML = `<div class="empty-state"><p>実行案の読み込みに失敗しました</p></div>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        list.innerHTML = `<div class="empty-state"><p>まだ実行案はありません</p></div>`;
+        return;
+      }
+
+      list.innerHTML = data.map((plan) => `
+        <article class="saved-task-card">
+          <div class="saved-task-top">
+            <div>
+              <h3 class="saved-task-title">${escapeHTML(plan.title || "")}</h3>
+              <div class="saved-task-meta">
+                カテゴリ: ${escapeHTML(plan.category || "未分類")}<br>
+                作成日: ${formatTaskDate(plan.created_at)}
+              </div>
+            </div>
+            <button class="delete-btn delete-plan-btn" data-plan-id="${plan.id}" type="button">削除</button>
+          </div>
+          ${plan.excerpt ? `<div class="saved-task-note">${escapeHTML(plan.excerpt)}</div>` : ""}
+        </article>
+      `).join("");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!currentUser) {
+        if (statusEl) statusEl.textContent = "ログインしてから保存してください";
+        return;
+      }
+
+      const category = byId("planCategoryInput")?.value?.trim() || "";
+      const title = byId("planTitleInput")?.value?.trim() || "";
+      const excerpt = byId("planExcerptInput")?.value?.trim() || "";
+      const detail = byId("planDetailInput")?.value?.trim() || "";
+      const thumbnail = byId("planThumbnailInput")?.value?.trim() || "";
+      const points = getTaskPointsFromForm();
+
+      if (!category || !title) {
+        if (statusEl) statusEl.textContent = "カテゴリとタイトルは必須です";
+        return;
+      }
+
+      if (statusEl) statusEl.textContent = "保存中...";
+
+      const { error } = await supabaseClient
+        .from("task_plans")
+        .insert({
+          user_id: currentUser.id,
+          category,
+          title,
+          excerpt,
+          detail,
+          thumbnail,
+          points,
+        });
+
+      if (error) {
+        console.error("task_plans insert error:", error);
+        if (statusEl) statusEl.textContent = `保存に失敗: ${error.message}`;
+        return;
+      }
+
+      form.reset();
+      if (statusEl) statusEl.textContent = "保存しました";
+      await loadTaskPlans();
+    });
+
+    list.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".delete-plan-btn");
+      if (!btn) return;
+
+      if (!currentUser) return;
+
+      const planId = btn.dataset.planId;
+      const ok = confirm("この実行案を削除しますか？");
+      if (!ok) return;
+
+      const { error } = await supabaseClient
+        .from("task_plans")
+        .delete()
+        .eq("id", planId)
+        .eq("user_id", currentUser.id);
+
+      if (error) {
+        console.error("task_plans delete error:", error);
+        alert("削除に失敗しました");
+        return;
+      }
+
+      await loadTaskPlans();
+    });
+
+    reloadBtn?.addEventListener("click", loadTaskPlans);
+    resetBtn?.addEventListener("click", () => {
+      form.reset();
+      if (statusEl) statusEl.textContent = "";
+    });
+
+    await loadTaskPlans();
+  }
+
+  async function initTaskSettingPage() {
+    const searchInput = byId("planSearchInput");
+    const plansList = byId("taskPlansSelectList");
+    const detailPanel = byId("taskSettingDetailPanel");
+    const savedList = byId("savedTasksList");
+    const reloadSavedBtn = byId("reloadSavedTasksBtn");
+
+    if (!plansList || !detailPanel || !savedList) return;
+
+    let allPlans = [];
+    let selectedPlanId = null;
+
+    function renderDetail(plan) {
+      if (!plan) {
+        detailPanel.innerHTML = `<div class="detail-empty">実行案を選ぶと詳細が表示されます。</div>`;
+        return;
+      }
+
+      const points = Array.isArray(plan.points) ? plan.points : [];
+
+      detailPanel.innerHTML = `
+        ${plan.thumbnail ? `<img class="detail-thumb" src="${escapeHTML(plan.thumbnail)}" alt="${escapeHTML(plan.title || "")}">` : ""}
+        <div class="detail-body">
+          <span class="detail-badge">${escapeHTML(plan.category || "未分類")}</span>
+          <h2 class="detail-title">${escapeHTML(plan.title || "")}</h2>
+          <p class="detail-text">${escapeHTML(plan.detail || "")}</p>
+
+          ${
+            points.length
+              ? `
+            <ul class="point-list">
+              ${points.map((point) => `
+                <li>
+                  <span class="point-dot"></span>
+                  <span>${escapeHTML(point)}</span>
+                </li>
+              `).join("")}
+            </ul>
+          `
+              : ""
+          }
+
+          <form id="taskSaveForm" class="detail-form">
+            <label>
+              タスク名
+              <input id="taskCustomTitleInput" type="text" value="${escapeHTML(plan.title || "")}" maxlength="100" required>
+            </label>
+
+            <label>
+              期限
+              <input id="taskDueDateInput" type="date">
+            </label>
+
+            <label>
+              メモ
+              <textarea id="taskMemoInput" rows="5" maxlength="1000" placeholder="このタスクでやること、気をつけることなど"></textarea>
+            </label>
+
+            <div class="btn-row">
+              <button type="submit" class="main-btn">このタスクを保存</button>
+              <button type="button" class="sub-btn" id="taskMemoSampleBtn">サンプル入力</button>
+            </div>
+            <div id="taskSaveStatus" class="task-status-text"></div>
+          </form>
+        </div>
+      `;
+
+      const sampleBtn = byId("taskMemoSampleBtn");
+      const memoInput = byId("taskMemoInput");
+      const saveForm = byId("taskSaveForm");
+      const statusEl = byId("taskSaveStatus");
+
+      sampleBtn?.addEventListener("click", () => {
+        if (!memoInput) return;
+        memoInput.value = [
+          `実行案: ${plan.title || ""}`,
+          "",
+          ...(points.length ? ["やること:", ...points.map((p) => `- ${p}`), ""] : []),
+          "まずは小さく始める。",
+        ].join("\n");
+      });
+
+      saveForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!currentUser) {
+          if (statusEl) statusEl.textContent = "ログインしてから保存してください";
+          return;
+        }
+
+        const customTitle = byId("taskCustomTitleInput")?.value?.trim() || "";
+        const dueDate = byId("taskDueDateInput")?.value || null;
+        const memo = byId("taskMemoInput")?.value?.trim() || "";
+
+        if (!customTitle) {
+          if (statusEl) statusEl.textContent = "タスク名を入力してください";
+          return;
+        }
+
+        if (statusEl) statusEl.textContent = "保存中...";
+
+        const { error } = await supabaseClient
+          .from("user_tasks")
+          .insert({
+            user_id: currentUser.id,
+            plan_id: plan.id,
+            plan_category: plan.category,
+            plan_title: plan.title,
+            custom_title: customTitle,
+            due_date: dueDate,
+            memo,
+            status: "todo",
+          });
+
+        if (error) {
+          console.error("user_tasks insert error:", error);
+          if (statusEl) statusEl.textContent = `保存に失敗: ${error.message}`;
+          return;
+        }
+
+        if (statusEl) statusEl.textContent = "保存しました";
+        await loadSavedTasks();
+      });
+    }
+
+    function renderPlans() {
+      const keyword = searchInput?.value?.trim()?.toLowerCase() || "";
+      const filtered = allPlans.filter((plan) => {
+        const target = [
+          plan.category,
+          plan.title,
+          plan.excerpt,
+          plan.detail,
+          ...(Array.isArray(plan.points) ? plan.points : []),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return target.includes(keyword);
+      });
+
+      if (!filtered.length) {
+        plansList.innerHTML = `<div class="empty-state"><p>該当する実行案がありません</p></div>`;
+        renderDetail(null);
+        return;
+      }
+
+      if (!filtered.some((p) => String(p.id) === String(selectedPlanId))) {
+        selectedPlanId = filtered[0].id;
+      }
+
+      plansList.innerHTML = filtered.map((plan) => `
+        <button class="plan-card ${String(plan.id) === String(selectedPlanId) ? "active" : ""}" data-plan-id="${plan.id}" type="button">
+          <div class="plan-inner">
+            <div class="plan-thumb-wrap">
+              ${
+                plan.thumbnail
+                  ? `<img class="plan-thumb" src="${escapeHTML(plan.thumbnail)}" alt="${escapeHTML(plan.title || "")}">`
+                  : `<div class="plan-thumb" style="display:flex;align-items:center;justify-content:center;background:#eef2f6;">📝</div>`
+              }
+              <span class="plan-category">${escapeHTML(plan.category || "未分類")}</span>
+            </div>
+            <div class="plan-content">
+              <h3>${escapeHTML(plan.title || "")}</h3>
+              <p class="plan-excerpt">${escapeHTML(plan.excerpt || "")}</p>
+              <div class="plan-footer">
+                <span class="plan-link">詳細を見る</span>
+                <span class="plan-tag">実行案</span>
+              </div>
+            </div>
+          </div>
+        </button>
+      `).join("");
+
+      plansList.querySelectorAll(".plan-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          selectedPlanId = card.dataset.planId;
+          renderPlans();
+          const selected = allPlans.find((p) => String(p.id) === String(selectedPlanId));
+          renderDetail(selected || null);
+        });
+      });
+
+      const selected = allPlans.find((p) => String(p.id) === String(selectedPlanId));
+      renderDetail(selected || null);
+    }
+
+    async function loadPlans() {
+      if (!currentUser) {
+        plansList.innerHTML = `<div class="empty-state"><p>ログインすると実行案が表示されます</p></div>`;
+        renderDetail(null);
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("task_plans")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("task_plans select error:", error);
+        plansList.innerHTML = `<div class="empty-state"><p>実行案の読み込みに失敗しました</p></div>`;
+        renderDetail(null);
+        return;
+      }
+
+      allPlans = data || [];
+      renderPlans();
+    }
+
+    async function loadSavedTasks() {
+      if (!currentUser) {
+        savedList.innerHTML = `<div class="empty-state"><p>ログインすると保存済みタスクが表示されます</p></div>`;
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("user_tasks")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("user_tasks load error:", error);
+        savedList.innerHTML = `<div class="empty-state"><p>保存済みタスクの読み込みに失敗しました</p></div>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        savedList.innerHTML = `<div class="empty-state"><p>まだ保存済みタスクはありません</p></div>`;
+        return;
+      }
+
+      savedList.innerHTML = data.map((task) => `
+        <article class="saved-task-card">
+          <div class="saved-task-top">
+            <div>
+              <h3 class="saved-task-title">${escapeHTML(task.custom_title || task.plan_title || "")}</h3>
+              <div class="saved-task-meta">
+                元の実行案: ${escapeHTML(task.plan_title || "")}<br>
+                カテゴリ: ${escapeHTML(task.plan_category || "未分類")}<br>
+                期限: ${escapeHTML(formatTaskDate(task.due_date))}<br>
+                状態: ${escapeHTML(task.status || "todo")}
+              </div>
+            </div>
+            <button class="delete-btn delete-user-task-btn" data-task-id="${task.id}" type="button">削除</button>
+          </div>
+          ${task.memo ? `<div class="saved-task-note">${escapeHTML(task.memo)}</div>` : ""}
+        </article>
+      `).join("");
+    }
+
+    plansList.addEventListener("click", () => {});
+    savedList.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".delete-user-task-btn");
+      if (!btn || !currentUser) return;
+
+      const ok = confirm("このタスクを削除しますか？");
+      if (!ok) return;
+
+      const { error } = await supabaseClient
+        .from("user_tasks")
+        .delete()
+        .eq("id", btn.dataset.taskId)
+        .eq("user_id", currentUser.id);
+
+      if (error) {
+        console.error("user_tasks delete error:", error);
+        alert("削除に失敗しました");
+        return;
+      }
+
+      await loadSavedTasks();
+    });
+
+    searchInput?.addEventListener("input", renderPlans);
+    reloadSavedBtn?.addEventListener("click", loadSavedTasks);
+
+    await loadPlans();
+    await loadSavedTasks();
+  }
+
+  async function initTaskPages() {
+    if (page === "task-plans") {
+      await initTaskPlansPage();
+    } else if (page === "task-setting") {
+      await initTaskSettingPage();
+    }
+  }
+  // =====================================
   // Global click handlers
   // =====================================
   document.addEventListener("click", (e) => {
@@ -1400,11 +1836,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else if (page === "notifications") {
         await loadNotifications();
+      } else if (page === "task-plans" || page === "task-setting") {
+        await initTaskPages();
       }
     } catch (e) {
       console.error("page init error:", e);
     }
-  }
 
   init();
 });
