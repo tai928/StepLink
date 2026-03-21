@@ -775,7 +775,6 @@ textarea {
   position: sticky;
   bottom: 0;
   z-index: 5;
-  width: 10px; /*add*/
 }
 
 /* ===========================
