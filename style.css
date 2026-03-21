@@ -155,7 +155,7 @@ body {
   margin-left: 240px;
   flex: 1;
   padding: 0 0 40px;
-  max-width: 700px;
+  max-width: 1100px;
   margin-right: auto;
   margin-bottom: 64px;
 }
@@ -334,7 +334,7 @@ textarea {
   font-weight: bold;
 }
 
-/* プロフィールリンクっぽく */
+/* プロフィールリンク */
 .post-user-area {
   cursor: pointer;
 }
@@ -682,7 +682,7 @@ textarea {
   text-align: right;
 }
 
-/* 入力エリア（比率調整済み） */ 
+/* 入力エリア */ 
 .dm-input-area { 
    display: flex; 
    padding: 8px 10px; 
@@ -718,7 +718,7 @@ textarea {
    background: var(--green-press); 
 }
 
-/* DM入力エリア：送信ボタンが横に伸びないように強制修正 */
+/* DM入力エリア*/
 .dm-input-area{
   display:flex;
   gap:8px;
@@ -728,11 +728,11 @@ textarea {
   background:#fff;
 }
 
-/* textareaはちゃんと幅を取る */
+/* dm幅*/
 .dm-input-area textarea,
 #dmInput{
   flex: 1 1 auto;
-  min-width: 0;          /* ←これ超重要（潰れ防止） */
+  min-width: 0;          
   min-height: 64px;
   max-height: 200px;
   padding: 10px 12px;
@@ -740,7 +740,7 @@ textarea {
   resize: vertical;
 }
 
-/* 送信ボタンは“中身サイズ”に固定（primary等のwidth:100%を殺す） */
+/* 送信ボタン */
 .dm-input-area button,
 #dmSendBtn,
 .dm-send-btn{
@@ -756,18 +756,18 @@ textarea {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 0; /* これ無いとスクロールが効かないことがある */
+  min-height: 0; 
 }
 
 /* メッセージ部分だけスクロール */
 .dm-messages{
   flex: 1 1 auto;
   overflow-y: auto;
-  min-height: 0; /* 重要 */
+  min-height: 0; 
   padding-bottom: 8px;
 }
 
-/* 入力エリアは下に固定（スクロールしない） */
+/* 入力エリアは下に固定 */
 .dm-input-area{
   flex: 0 0 auto;
   border-top: 1px solid var(--line);
@@ -825,28 +825,27 @@ textarea {
    messagesページ専用：外側を固定して、中だけスクロール
 =========================== */
 body[data-page="messages"] .timeline{
-  height: 100vh;          /* 画面いっぱい */
-  overflow: hidden;       /* ✅ timeline自体はスクロール禁止 */
-  display: flex;          /* ✅ 縦に積む */
+  height: 100vh;          
+  overflow: hidden;       
+  display: flex;          
   flex-direction: column;
-  padding-bottom: 0;      /* ボトム余白いらない */
+  padding-bottom: 0;      
 }
 
-/* ヘッダーは上固定（今のstickyも生きるけど、flexでも安定） */
+/* ヘッダーは上固定 */
 body[data-page="messages"] .timeline-header{
   flex: 0 0 auto;
 }
 
-/* DM本体が残り全部を使う */
 body[data-page="messages"] .dm-layout{
   flex: 1 1 auto;
-  min-height: 0;          /* ✅ これないと中スクロール死ぬ */
-  overflow: hidden;       /* ✅ 外側固定 */
-  margin-left: 0 !important; /* ✅ 二重ズレを殺す */
-  height: auto;           /* ✅ timeline内で伸びる */
+  min-height: 0;          
+  overflow: hidden;       
+  margin-left: 0 !important; 
+  height: auto;           
 }
 
-/* DM左一覧＆本文だけスクロール（既存指定の保険） */
+/* DM左一覧＆本文だけスクロール */
 body[data-page="messages"] .dm-conversation-list{
   overflow-y: auto;
   min-height: 0;
@@ -857,7 +856,6 @@ body[data-page="messages"] .dm-messages{
   min-height: 0;
 }
 
-/* 入力欄は固定（既存でもOKだが念押し） */
 body[data-page="messages"] .dm-input-area{
   flex: 0 0 auto;
   position: sticky;
@@ -865,7 +863,7 @@ body[data-page="messages"] .dm-input-area{
   z-index: 10;
 }
 
-/* 送信ボタン：primaryの width:100% を完全に無効化 */
+/* 送信ボタン*/
 body[data-page="messages"] #dmSendBtn{
   width: auto !important;
   flex: 0 0 auto !important;
@@ -876,8 +874,8 @@ body[data-page="messages"] #dmSendBtn{
 =========================== */
 body[data-page="messages"] {
   position: fixed;
-  inset: 0;              /* top/bottom/left/right 全部0 */
-  overflow: hidden;      /* bodyは絶対にスクロールさせない */
+  inset: 0;             
+  overflow: hidden;      
 }
 /* ===========================
    通知ドット
