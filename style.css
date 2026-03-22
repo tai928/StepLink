@@ -720,6 +720,7 @@ textarea {
 
 /* DM入力エリア*/
 .dm-input-area{
+  position: sticky;
   display:flex;
   gap:8px;
   align-items:flex-end;
