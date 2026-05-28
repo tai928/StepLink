@@ -11,21 +11,33 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Helvetica Neue", Arial, sans-serif;
-  background: #f4f4f4;
-  color: #222;
+  background: linear-gradient(135deg, #f2f9ee 0%, #edf4ff 100%);
+  color: var(--text-main);
   left: 0;
   right: 0;
+  min-height: 100vh;
+  position: relative;
 }
 
-/* 色定義（緑テーマ） */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(126, 203, 79, 0.26), transparent 45%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 色定義（オシャレなネオグリーンテーマ） */
 :root {
-  --green-main: #81B33B;
-  --green-hover: #638B2C;
-  --green-press: #4E6D23;
-  --line: #ddd;
+  --green-main: #7ecb4f;
+  --green-hover: #68ad3f;
+  --green-press: #4f872f;
+  --line: #d9e4d3;
   --bg-white: #ffffff;
-  --text-main: #222;
-  --text-sub: #777;
+  --text-main: #1c2716;
+  --text-sub: #5f7059;
+  --card-shadow: 0 10px 30px rgba(29, 54, 15, 0.08);
 }
 
 .app {
@@ -43,16 +55,21 @@ body {
   bottom: 0;
   width: 240px;
   padding: 20px;
-  background: #f5f5f5;
-  border-right: 1px solid #ddd;
+  background: rgba(255, 255, 255, 0.82);
+  border-right: 1px solid #dce8d7;
+  backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
 }
 
 .logo {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: bold;
   margin-bottom: 20px;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, #4e8b2d, #85c95a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .nav {
@@ -64,17 +81,18 @@ body {
 
 .nav-item {
   text-decoration: none;
-  color: #333;
+  color: #2d3a27;
   padding: 10px 14px;
   border-radius: 12px;
   transition: 0.2s;
 }
 .nav-item:hover {
-  background: #eee;
+  background: #edf6e8;
 }
 .nav-item.active {
-  background: var(--green-main);
+  background: linear-gradient(120deg, #8bd95a, #6fb542);
   color: #fff;
+  box-shadow: var(--card-shadow);
 }
 
 .theme-toggle {
@@ -163,23 +181,25 @@ body {
 .timeline-header {
   border-bottom: 1px solid var(--line);
   padding: 10px 20px;
-  background: var(--bg-white);
+  background: rgba(255, 255, 255, 0.84);
   position: sticky;
   top: 0;
   z-index: 10;
+  backdrop-filter: blur(8px);
 }
 
 /* ===========================
    投稿カード
 =========================== */
 .new-post-card {
-  background: var(--bg-white);
+  background: rgba(255, 255, 255, 0.9);
   margin: 16px 20px;
   padding: 15px 16px;
   border-radius: 12px;
   display: flex;
   gap: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid #dce8d7;
+  box-shadow: var(--card-shadow);
 }
 
 .avatar {
